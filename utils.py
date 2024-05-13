@@ -82,7 +82,13 @@ def get_metric(data):
     stat["Percent"] = diff_percentage
     return stat
 
-def make_graph(data, datebreaks, interval):
+def line_coloring(data):
+    if data["Close"].values[0] > data["Close"].values[-1]:
+        return "red"
+    else:
+        return "green"
+
+def make_graph(data, datebreaks, interval, chart_type):
     if interval[1:] == "m":
         dval = int(interval[0])
     elif interval[1:] == "h":
@@ -93,9 +99,15 @@ def make_graph(data, datebreaks, interval):
         dval = int(interval[0])*60*24*7
     else :
         dval = int(interval[0])*60*24*30
-    fig = go.Figure(data=[go.Candlestick(x=data.index,
-                    open=data["Open"], close=data["Close"],
-                    high=data["High"], low=data["Low"])])
+    
+    if chart_type == "Candlestick":
+        fig = go.Figure(data=[go.Candlestick(x=data.index,
+                        open=data["Open"], close=data["Close"],
+                        high=data["High"], low=data["Low"])])
+    else :
+        color = line_coloring(data)
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=data.index, y=data["Close"], line=dict(color=color, width=3)))
     fig.update_layout(margin={"b":8, "t":8, "l":8, "r":8},
                     autosize=True, template='plotly_dark',
                     xaxis_rangeslider_visible=False)

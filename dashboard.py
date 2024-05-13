@@ -31,7 +31,7 @@ def main() :
                 value="Rp {0}".format(stock_metric['Close']),
                 delta="Rp {0} ({1} %)".format(stock_metric['Diff'], stock_metric['Percent']))
 
-    fig = make_graph(stock_data, datebreaks, st.session_state.interval_filter)
+    fig = make_graph(stock_data, datebreaks, st.session_state.interval_filter, st.session_state.chart_type)
     st.plotly_chart(fig)
 
     filter1, filter2, filter3 = st.columns(3)
@@ -56,8 +56,13 @@ def main() :
         if st.session_state.new_interval != st.session_state.interval_filter:
             st.session_state.interval_filter = st.session_state.new_interval
 
+    def update_chart_type():
+        if st.session_state.update_chart_type != st.session_state.chart_type:
+            st.session_state.chart_type = st.session_state.update_chart_type
+
     with filter1:
-        chart_type = st.selectbox("Chart Type", ["Candlestick", "Line"])
+        st.selectbox("Chart Type", ["Candlestick", "Line"],
+            key="update_chart_type", on_change=update_chart_type)
 
     with filter2:
         st.selectbox("Period", ["1d", "1mo", "1y", "5y", "max"], format_func=format_func,
