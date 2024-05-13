@@ -5,13 +5,19 @@ def main() :
     if "chart_type" not in st.session_state : st.session_state.chart_type = "Candlestick"
     if "period_filter" not in st.session_state : st.session_state.period_filter = "1d"
     if "interval_filter" not in st.session_state : st.session_state.interval_filter = "5m"
+    if "code" not in st.session_state : st.session_state.code = "IHSG"
     
     st.header("Indonesian Stock Exchange Dashboard")
     col1, col2, col3 = st.columns([0.4, 0.3, 0.3])
 
+    def new_code():
+        if st.session_state.new_code[:4] != st.session_state.code:
+            st.session_state.code = st.session_state.new_code[:4]
+
     with col1:
         option = st.selectbox("IDX Stocks",
-                get_idx())
+                get_idx(), key="new_code",
+                on_change=new_code)
         code = option[:4]
         name = option[5:]
     
@@ -20,11 +26,11 @@ def main() :
         st.write(name)
     
     with col3:
-        if option[:4] == "IHSG":
+        if st.session_state.code == "IHSG":
             stock_data, datebreaks = get_stock("^JKSE", st.session_state.period_filter,
                                                 st.session_state.interval_filter)
         else :
-            stock_data, datebreaks = get_stock(code+".JK", st.session_state.period_filter,
+            stock_data, datebreaks = get_stock(st.session_state.code+".JK", st.session_state.period_filter,
                                                 st.session_state.interval_filter)
         stock_metric = get_metric(stock_data)
         st.metric(label="Close Price",
@@ -32,7 +38,7 @@ def main() :
                 delta="{0} ({1} %)".format(stock_metric['Diff'], stock_metric['Percent']))
 
     fig = make_graph(stock_data, datebreaks, st.session_state.interval_filter, st.session_state.chart_type)
-    st.plotly_chart(fig)
+    st.write(fig)
 
     filter1, filter2, filter3 = st.columns(3)
     time_dict = {"5m":"5 Minutes", "1h":"1 Hour",
