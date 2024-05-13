@@ -7,7 +7,7 @@ def main() :
     if "interval_filter" not in st.session_state : st.session_state.interval_filter = "5m"
     
     st.header("Indonesian Stock Exchange Dashboard")
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3 = st.columns([0.4, 0.3, 0.3])
 
     with col1:
         option = st.selectbox("IDX Stocks",
@@ -29,7 +29,7 @@ def main() :
         stock_metric = get_metric(stock_data)
         st.metric(label="Close Price",
                 value="Rp {0}".format(stock_metric['Close']),
-                delta="Rp {0} ({1} %)".format(stock_metric['Diff'], stock_metric['Percent']))
+                delta="{0} ({1} %)".format(stock_metric['Diff'], stock_metric['Percent']))
 
     fig = make_graph(stock_data, datebreaks, st.session_state.interval_filter, st.session_state.chart_type)
     st.plotly_chart(fig)
