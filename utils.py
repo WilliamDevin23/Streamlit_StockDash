@@ -3,20 +3,9 @@ import pandas as pd
 import yfinance as yf
 import requests
 from bs4 import BeautifulSoup
-from requests import Session
-from requests_cache import CacheMixin, SQLiteCache
-from requests_ratelimiter import LimiterMixin, MemoryQueueBucket
-from pyrate_limiter import Duration, RequestRate, Limiter
+from requests_ratelimiter import LimiterSession
 
-
-class CachedLimiterSession(CacheMixin, LimiterMixin, Session):
-    pass
-
-session = CachedLimiterSession(
-    limiter=Limiter(RequestRate(2, Duration.SECOND*5)),  # max 2 requests per 5 seconds
-    bucket_class=MemoryQueueBucket,
-    backend=SQLiteCache("yfinance.cache"),
-)
+session = LimiterSession(per_minute=12)
 
 def get_idx():
     url = "https://id.wikipedia.org/wiki/Daftar_perusahaan_yang_tercatat_di_Bursa_Efek_Indonesia"
@@ -37,7 +26,7 @@ def get_idx():
 
 def get_stock(ticker, period, interval):
     stock = yf.Ticker(ticker, session=session)
-    stock_data = stock.history(period=period, interval=interval)
+    stock_data = stock.history(period=period, interval=interval, prepost=True)
     if interval[1:] == "m" or interval[1:] == "h":
         stock_data.index = stock_data.index.strftime("%Y-%m-%d %H:%M:%S")
 
