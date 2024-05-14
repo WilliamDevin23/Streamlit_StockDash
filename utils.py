@@ -22,11 +22,11 @@ def get_idx():
         name = " (" + cell[i].get_text().strip() + ")"
         i += 2
         companies.append(code + name)
-    return ['IHSG (Indeks Harga Saham Gabungan)'] + companies
+    return ['IHSG (Indeks Harga Saham Gabungan)'] + sorted(companies)
 
 def get_stock(ticker, period, interval):
     stock = yf.Ticker(ticker, session=session)
-    stock_data = stock.history(period=period, interval=interval, prepost=True)
+    stock_data = stock.history(period=period, interval=interval, prepost=False)
     if interval[1:] == "m" or interval[1:] == "h":
         stock_data.index = stock_data.index.strftime("%Y-%m-%d %H:%M:%S")
 

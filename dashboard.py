@@ -20,7 +20,7 @@ def main() :
                 on_change=new_code)
     code = option[:4]
     name = option[5:]
-
+    
     placeholder = st.empty()
 
     with placeholder.container():
