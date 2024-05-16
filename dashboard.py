@@ -1,5 +1,6 @@
 import streamlit as st
 from utils import *
+from prediction import *
 import time
 
 def main() :
@@ -13,7 +14,17 @@ def main() :
     def new_code():
         if st.session_state.new_code[:4] != st.session_state.code:
             st.session_state.code = st.session_state.new_code[:4]
-            
+    
+    # Forecasting
+    if st.session_state.code == "IHSG":
+        daily_data = get_stock("^JKSE", "5y", "1d", close_only=True)
+    else:
+        daily_data = get_stock(st.session_state.code+".JK", "5y", "1d", close_only=True)
+    model = get_model()
+    scaler = get_scaler()
+    scaled_data = minmax_data(daily_data, scaler)
+    forecast = int(model_forecast(scaler, model, scaled_data[-51:-1]))
+
     st.header("Indonesian Stock Exchange Dashboard")
     option = st.selectbox("IDX Stocks",
                 get_idx(), key="new_code",
@@ -24,7 +35,7 @@ def main() :
     placeholder = st.empty()
 
     with placeholder.container():
-        col1, col2 = st.columns([0.6, 0.4])
+        col1, col2, col3 = st.columns(3)
         
         with col1:
             st.subheader(code)
@@ -36,11 +47,15 @@ def main() :
         else :
             stock_data, datebreaks = get_stock(st.session_state.code+".JK", st.session_state.period_filter,
                                                 st.session_state.interval_filter)
-        stock_metric = get_metric(stock_data)
+        stock_metric = get_metric(stock_data, forecast)
 
         col2.metric(label="Close Price",
                 value="Rp {0}".format(stock_metric['Close']),
                 delta="{0} ({1} %)".format(stock_metric['Diff'], stock_metric['Percent']))
+        
+        col3.metric(label="Predicted Close Price Today",
+                value="Rp {0}".format(forecast),
+                delta="{0} ({1} %)".format(stock_metric['Diff Forecast'], stock_metric['Percent Forecast']))
 
         fig = make_graph(stock_data, datebreaks, st.session_state.interval_filter, st.session_state.chart_type)
         st.write(fig)
@@ -92,7 +107,7 @@ def main() :
 
     while True:
         with placeholder.container():
-            col1, col2 = st.columns([0.6, 0.4])
+            col1, col2, col3 = st.columns(3)
             
             with col1:
                 st.subheader(code)
@@ -104,14 +119,19 @@ def main() :
             else :
                 stock_data, datebreaks = get_stock(st.session_state.code+".JK", st.session_state.period_filter,
                                                     st.session_state.interval_filter)
-            stock_metric = get_metric(stock_data)
+            stock_metric = get_metric(stock_data, forecast)
 
             col2.metric(label="Close Price",
                     value="Rp {0}".format(stock_metric['Close']),
                     delta="{0} ({1} %)".format(stock_metric['Diff'], stock_metric['Percent']))
+            
+            col3.metric(label="Predicted Close Price Today",
+                    value="Rp {0}".format(forecast),
+                    delta="{0} ({1} %)".format(stock_metric['Diff Forecast'], stock_metric['Percent Forecast']))
 
             fig = make_graph(stock_data, datebreaks, st.session_state.interval_filter, st.session_state.chart_type)
             st.write(fig)
-        time.sleep(10)
+        
+        time.sleep(30)
 if __name__ == "__main__":
     main()

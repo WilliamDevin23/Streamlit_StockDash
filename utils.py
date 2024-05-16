@@ -24,51 +24,64 @@ def get_idx():
         companies.append(code + name)
     return ['IHSG (Indeks Harga Saham Gabungan)'] + sorted(companies)
 
-def get_stock(ticker, period, interval):
+def get_stock(ticker, period, interval, close_only=False):
     stock = yf.Ticker(ticker, session=session)
     stock_data = stock.history(period=period, interval=interval, prepost=False)
-    if interval[1:] == "m" or interval[1:] == "h":
-        stock_data.index = stock_data.index.strftime("%Y-%m-%d %H:%M:%S")
 
-        if interval[1:] == "m":
-            dt_all = pd.date_range(start=stock_data.index.tolist()[0],
-                                end=stock_data.index.tolist()[-1], freq="5min")
-        else :
-            dt_all = pd.date_range(start=stock_data.index.tolist()[0],
-                                end=stock_data.index.tolist()[-1], freq="h")
-        dt_all_str = [d.strftime("%Y-%m-%d %H:%M:%S") for d in dt_all.tolist()]
-    
-    elif interval[1:] == "d" or interval[1:] == "wk" :
-        stock_data.index = stock_data.index.strftime("%Y-%m-%d")
+    if not close_only:
+        if interval[1:] == "m" or interval[1:] == "h":
+            stock_data.index = stock_data.index.strftime("%Y-%m-%d %H:%M:%S")
 
-        if interval[1:] == "d":
-            dt_all = pd.date_range(start=stock_data.index.tolist()[0],
-                                end=stock_data.index.tolist()[-1], freq="D")
-        if interval[1:] == "wk":
-            dt_all = pd.date_range(start=stock_data.index.tolist()[0],
-                                end=stock_data.index.tolist()[-1], freq="7D")
+            if interval[1:] == "m":
+                dt_all = pd.date_range(start=stock_data.index.tolist()[0],
+                                    end=stock_data.index.tolist()[-1], freq="5min")
+            else :
+                dt_all = pd.date_range(start=stock_data.index.tolist()[0],
+                                    end=stock_data.index.tolist()[-1], freq="h")
+            dt_all_str = [d.strftime("%Y-%m-%d %H:%M:%S") for d in dt_all.tolist()]
         
-        dt_all_str = [d.strftime("%Y-%m-%d") for d in dt_all.tolist()]
+        elif interval[1:] == "d" or interval[1:] == "wk" :
+            stock_data.index = stock_data.index.strftime("%Y-%m-%d")
 
-    else:
-        stock_data.index = stock_data.index.strftime("%Y-%m")
-        dt_all = pd.date_range(start=stock_data.index.tolist()[0],
-                            end=stock_data.index.tolist()[-1], freq="ME")
-        
-        dt_all_str = [d.strftime("%Y-%m") for d in dt_all.tolist()]
+            if interval[1:] == "d":
+                dt_all = pd.date_range(start=stock_data.index.tolist()[0],
+                                    end=stock_data.index.tolist()[-1], freq="D")
+            if interval[1:] == "wk":
+                dt_all = pd.date_range(start=stock_data.index.tolist()[0],
+                                    end=stock_data.index.tolist()[-1], freq="7D")
+            
+            dt_all_str = [d.strftime("%Y-%m-%d") for d in dt_all.tolist()]
 
-    dt_breaks = [d for d in dt_all_str if not d in stock_data.index.tolist()]
-    return stock_data, dt_breaks
+        else:
+            stock_data.index = stock_data.index.strftime("%Y-%m")
+            dt_all = pd.date_range(start=stock_data.index.tolist()[0],
+                                end=stock_data.index.tolist()[-1], freq="ME")
+            
+            dt_all_str = [d.strftime("%Y-%m") for d in dt_all.tolist()]
 
-def get_metric(data):
+        dt_breaks = [d for d in dt_all_str if not d in stock_data.index.tolist()]
+        return stock_data, dt_breaks
+
+    else :
+        return stock_data["Close"].values
+
+def get_metric(data, forecast):
     stat = {}
     open_price = data["Open"].values[0]
     close_price = round(data["Close"].values[-1], 2)
+
     diff = round(close_price - open_price, 2)
+    diff_forecast = round(forecast - open_price)
+
     diff_percentage = round(diff*100/open_price, 2)
+    diff_percentage_forecast = round(diff_forecast*100/open_price, 2)
+
     stat["Close"] = close_price
     stat["Diff"] = diff
     stat["Percent"] = diff_percentage
+    stat["Diff Forecast"] = diff_forecast
+    stat["Percent Forecast"] = diff_percentage_forecast
+
     return stat
 
 def line_coloring(data):
