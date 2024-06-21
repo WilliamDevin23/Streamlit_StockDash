@@ -2,8 +2,13 @@ import streamlit as st
 from utils import *
 from prediction import *
 import time
+from datetime import datetime
+import pytz
 
 def main() :
+    
+    jkt_tz = pytz.timezone('Asia/Jakarta')
+    jkt_hour = int(datetime.now(jkt_tz).strftime("%H"))
     
     #Session states
     if "chart_type" not in st.session_state : st.session_state.chart_type = "Candlestick"
@@ -114,7 +119,7 @@ def main() :
     st.subheader("Download the CSV")
     st.write(stock_data)
     
-    while True:
+    while jkt_hour >= 9 and jkt_hour <= 16 :
         update_data()
         time.sleep(30)
 if __name__ == "__main__":
