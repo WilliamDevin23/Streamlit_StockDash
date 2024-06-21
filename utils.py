@@ -85,7 +85,7 @@ def get_metric(data, forecast):
     return stat
 
 def line_coloring(data):
-    if data["Close"].values[0] > data["Close"].values[-1]:
+    if data[0] > data[-1]:
         return "red"
     else:
         return "green"
@@ -107,11 +107,12 @@ def make_graph(data, datebreaks, interval, chart_type):
                         open=data["Open"], close=data["Close"],
                         high=data["High"], low=data["Low"])])
     else :
-        color = line_coloring(data)
+        data_arr = data["Open"].tolist()[:1] + data["Close"].tolist()[1:]
+        color = line_coloring(data_arr)
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=data.index, y=data["Close"], line=dict(color=color, width=3)))
+        fig.add_trace(go.Scatter(x=data.index, y=data_arr, line=dict(color=color, width=3)))
     fig.update_layout(margin={"b":8, "t":8, "l":8, "r":8},
-                    autosize=True, template='plotly_dark',
-                    xaxis_rangeslider_visible=False)
+                      autosize=True, template='plotly_dark',
+                      xaxis_rangeslider_visible=False)
     fig.update_xaxes(rangebreaks=[{"values":datebreaks, "dvalue": dval*60*1000}])
     return fig

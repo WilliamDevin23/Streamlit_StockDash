@@ -27,44 +27,50 @@ def main() :
 
     st.header("Indonesian Stock Exchange Dashboard")
     option = st.selectbox("IDX Stocks",
-                get_idx(), key="new_code",
-                on_change=new_code)
+                          get_idx(), key="new_code",
+                          on_change=new_code)
     code = option[:4]
     name = option[5:]
     
     placeholder = st.empty()
 
-    with placeholder.container():
-        col1, col2, col3 = st.columns(3)
+    def update_data() :
         
-        with col1:
-            st.subheader(code)
-            st.write(name)
+        global stock_data
         
-        if st.session_state.code == "IHSG":
-                stock_data, datebreaks = get_stock("^JKSE", st.session_state.period_filter,
-                                                    st.session_state.interval_filter)
-        else :
-            stock_data, datebreaks = get_stock(st.session_state.code+".JK", st.session_state.period_filter,
-                                                st.session_state.interval_filter)
-        stock_metric = get_metric(stock_data, forecast)
+        with placeholder.container():
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.subheader(code)
+                st.write(name)
+            
+            if st.session_state.code == "IHSG":
+                    stock_data, datebreaks = get_stock("^JKSE", st.session_state.period_filter,
+                                                       st.session_state.interval_filter)
+            else :
+                stock_data, datebreaks = get_stock(st.session_state.code+".JK", st.session_state.period_filter,
+                                                   st.session_state.interval_filter)
+            stock_metric = get_metric(stock_data, forecast)
 
-        col2.metric(label="Close Price",
-                value="Rp {0}".format(stock_metric['Close']),
-                delta="{0} ({1} %)".format(stock_metric['Diff'], stock_metric['Percent']))
-        
-        col3.metric(label="Predicted Close Price Today",
-                value="Rp {0}".format(forecast),
-                delta="{0} ({1} %)".format(stock_metric['Diff Forecast'], stock_metric['Percent Forecast']))
+            col2.metric(label="Close Price",
+                        value="Rp {0}".format(stock_metric['Close']),
+                        delta="{0} ({1} %)".format(stock_metric['Diff'], stock_metric['Percent']))
+            
+            col3.metric(label="Predicted Close Price Today",
+                        value="Rp {0}".format(forecast),
+                        delta="{0} ({1} %)".format(stock_metric['Diff Forecast'], stock_metric['Percent Forecast']))
 
-        fig = make_graph(stock_data, datebreaks, st.session_state.interval_filter, st.session_state.chart_type)
-        st.write(fig)
+            fig = make_graph(stock_data, datebreaks, st.session_state.interval_filter, st.session_state.chart_type)
+            st.write(fig)
+    
+    update_data()
 
     filter1, filter2, filter3 = st.columns(3)
     time_dict = {"5m":"5 Minutes", "1h":"1 Hour",
-                    "1d":"1 Day", "1wk":"1 Week",
-                    "1mo":"1 Month", "1y":"1 Year", "1mo":"1 Month",
-                    "5y":"5 Years", "max":"All"}
+                 "1d":"1 Day", "1wk":"1 Week",
+                 "1mo":"1 Month", "1y":"1 Year", "1mo":"1 Month",
+                 "5y":"5 Years", "max":"All"}
 
     def format_func(choice):
         return time_dict[choice]
@@ -88,11 +94,11 @@ def main() :
 
     with filter1:
         st.selectbox("Chart Type", ["Candlestick", "Line"],
-            key="update_chart_type", on_change=update_chart_type)
+                     key="update_chart_type", on_change=update_chart_type)
 
     with filter2:
         st.selectbox("Period", ["1d", "1mo", "1y", "5y", "max"], format_func=format_func,
-            key="new_period", on_change=update_period)
+                     key="new_period", on_change=update_period)
 
     with filter3:
         intervals = ["5m", "1h", "1d", "1wk", "1mo"]
@@ -103,35 +109,13 @@ def main() :
         else :
             intervals = intervals[-3:]
         st.selectbox("Interval", intervals, format_func=format_func,
-            key="new_interval", on_change=update_interval)
+                     key="new_interval", on_change=update_interval)
 
+    st.subheader("Download the CSV")
+    st.write(stock_data)
+    
     while True:
-        with placeholder.container():
-            col1, col2, col3 = st.columns(3)
-            
-            with col1:
-                st.subheader(code)
-                st.write(name)
-            
-            if st.session_state.code == "IHSG":
-                    stock_data, datebreaks = get_stock("^JKSE", st.session_state.period_filter,
-                                                        st.session_state.interval_filter)
-            else :
-                stock_data, datebreaks = get_stock(st.session_state.code+".JK", st.session_state.period_filter,
-                                                    st.session_state.interval_filter)
-            stock_metric = get_metric(stock_data, forecast)
-
-            col2.metric(label="Close Price",
-                    value="Rp {0}".format(stock_metric['Close']),
-                    delta="{0} ({1} %)".format(stock_metric['Diff'], stock_metric['Percent']))
-            
-            col3.metric(label="Predicted Close Price Today",
-                    value="Rp {0}".format(forecast),
-                    delta="{0} ({1} %)".format(stock_metric['Diff Forecast'], stock_metric['Percent Forecast']))
-
-            fig = make_graph(stock_data, datebreaks, st.session_state.interval_filter, st.session_state.chart_type)
-            st.write(fig)
-        
+        update_data()
         time.sleep(30)
 if __name__ == "__main__":
     main()
