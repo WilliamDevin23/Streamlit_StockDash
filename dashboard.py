@@ -6,6 +6,7 @@ from datetime import datetime
 import pytz
 
 st.set_page_config(layout='wide')
+st.markdown("<style>div.modebar { left:0%; } button[title='View fullscreen'] { position: absolute; left: -5%; }</style>", unsafe_allow_html=True)
 
 def main() :
     
@@ -19,6 +20,7 @@ def main() :
     if "interval_filter" not in st.session_state : st.session_state.interval_filter = "5m"
     if "code" not in st.session_state : st.session_state.code = "IHSG"
     if "moving_avgs" not in st.session_state : st.session_state.moving_avgs = []
+    if "horizontals" not in st.session_state : st.session_state.horizontals = []
 
     def new_code():
         if st.session_state.new_code[:4] != st.session_state.code:
@@ -43,12 +45,12 @@ def main() :
     
     placeholder = st.empty()
 
-    def update_data(ma_arr) :
+    def update_data(ma_arr, h_lines) :
         
         global stock_data, stock_metric, pred, datebreaks
         
         with placeholder.container():
-            graph, pred = st.columns([0.8, 0.2], gap='small')
+            graph, pred = st.columns([0.7, 0.3], gap='small')
         
             with graph :
                 col1, col2 = st.columns(2)
@@ -70,9 +72,15 @@ def main() :
                             delta="{0} ({1} %)".format(stock_metric['Diff'], stock_metric['Percent']))
 
                 fig = make_graph(stock_data, datebreaks, st.session_state.interval_filter, st.session_state.chart_type, ma_arr)
+                if st.session_state.interval_filter == "m" or st.session_state.interval_filter == "h" :
+                    for h in h_lines :
+                        fig.add_hline(h, line_color='white', annotation_text=h, annotation_position='bottom right', annotation_font_color='white')
+                else :
+                    for h in h_lines :
+                        fig.add_hline(h, line_color='white', annotation_text=h, annotation_position='bottom right', annotation_font_color='white', row=1, col=1)
                 st.plotly_chart(fig, use_container_width=True)
     
-    update_data(st.session_state.moving_avgs)
+    update_data(st.session_state.moving_avgs, st.session_state.horizontals)
             
     with pred :
         time_dict = {"5m":"5 Minutes", "1h":"1 Hour",
@@ -126,23 +134,38 @@ def main() :
                 ma = st.number_input(label="Add MA", format="%d", step=1)
                 if st.form_submit_button("Add") :
                     st.session_state.moving_avgs.append(ma)
-                    update_data(st.session_state.moving_avgs)
+                    update_data(st.session_state.moving_avgs, st.session_state.horizontals)
         with rm :
             with st.form(key='rm-ma-form') :
                 rm_ma = st.number_input(label="Remove MA", format="%d", step=1)
                 if st.form_submit_button("Remove") and rm_ma in st.session_state.moving_avgs:
                     st.session_state.moving_avgs.remove(rm_ma)
-                    update_data(st.session_state.moving_avgs)
+                    update_data(st.session_state.moving_avgs, st.session_state.horizontals)
+        
+        add_line, rm_line = st.columns([0.45, 0.55], gap='small')
+        with add_line :
+            with st.form(key='horizontal-form') :
+                h = st.number_input(label="Add Horizontal Line", format="%d", step=1)
+                if st.form_submit_button("Add") :
+                    st.session_state.horizontals.append(h)
+                    update_data(st.session_state.moving_avgs, st.session_state.horizontals)
+        with rm_line :
+            with st.form(key='rm-horizontal-form') :
+                rm_h = st.number_input(label="Remove Horizontal Line", format="%d", step=1)
+                if st.form_submit_button("Remove") and rm_h in st.session_state.horizontals:
+                    st.session_state.horizontals.remove(rm_h)
+                    update_data(st.session_state.moving_avgs, st.session_state.horizontals)
 
-    st.subheader("Predictions")
+    st.markdown("<h3 style='text-align:center; margin: 3px 0px;'>Predictions</h3>", unsafe_allow_html=True)
     st.metric(label="Predicted Close Price Today",
                 value="Rp {0}".format(forecast),
                 delta="{0} ({1} %)".format(stock_metric['Diff Forecast'], stock_metric['Percent Forecast']))
-    st.subheader("Download the CSV")
+                
+    st.markdown("<h3 style='text-align:center;'>Download as CSV</h3>", unsafe_allow_html=True)
     st.write(stock_data)
     
     while jkt_hour >= 9 and jkt_hour <= 16 and not (jkt_day == "Saturday" or jkt_day == "Sunday") :
-        update_data()
+        update_data(st.session_state.moving_avgs, st.session_state.horizontals)
         time.sleep(30)
 if __name__ == "__main__":
     main()

@@ -1,4 +1,5 @@
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import pandas as pd
 import yfinance as yf
 import requests
@@ -107,15 +108,27 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr):
     new_data = data.copy()
     new_data = add_ma(new_data, ma_arr)
     
-    if chart_type == "Candlestick":
-        fig = go.Figure(data=[go.Candlestick(x=new_data.index,
+    data_arr = new_data["Open"].tolist()[:1] + new_data["Close"].tolist()[1:]
+    color = line_coloring(data_arr)
+    
+    if interval[1:] != "m" and interval[1:] != "h" :
+        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.05, subplot_titles=('', 'Volume'), row_width=[0.3, 0.8])
+        if chart_type == "Candlestick":
+            fig.add_trace(go.Candlestick(x=new_data.index,
                         open=new_data["Open"], close=new_data["Close"],
-                        high=new_data["High"], low=new_data["Low"])])
+                        high=new_data["High"], low=new_data["Low"], showlegend=False), row=1, col=1)
+        else :
+            fig.add_trace(go.Scatter(x=new_data.index, y=data_arr, line=dict(color=color, width=3)), row=1, col=1)
+        fig.add_trace(go.Bar(x=data.index, y=data["Volume"], showlegend=False), row=2, col=1)
     else :
-        data_arr = new_data["Open"].tolist()[:1] + new_data["Close"].tolist()[1:]
-        color = line_coloring(data_arr)
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=new_data.index, y=data_arr, line=dict(color=color, width=3)))
+        if chart_type == "Candlestick":
+            fig.add_trace(go.Candlestick(x=new_data.index,
+                        open=new_data["Open"], close=new_data["Close"],
+                        high=new_data["High"], low=new_data["Low"], showlegend=False))
+        else :
+            fig.add_trace(go.Scatter(x=new_data.index, y=data_arr, line=dict(color=color, width=3)))
+    
     fig.update_layout(margin={"b":8, "t":8, "l":8, "r":8},
                       autosize=True, template='plotly_dark',
                       xaxis_rangeslider_visible=False)
