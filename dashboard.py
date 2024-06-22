@@ -142,7 +142,7 @@ def main() :
     st.write(stock_data)
     
     while jkt_hour >= 9 and jkt_hour <= 16 and not (jkt_day == "Saturday" or jkt_day == "Sunday") :
-        update_data()
+        update_data(st.session_state.moving_avgs)
         time.sleep(30)
 if __name__ == "__main__":
     main()
