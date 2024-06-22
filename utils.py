@@ -26,7 +26,7 @@ def get_idx():
 
 def get_stock(ticker, period, interval, close_only=False):
     stock = yf.Ticker(ticker, session=session)
-    stock_data = stock.history(period=period, interval=interval, prepost=False)
+    stock_data = stock.history(period=period, interval=interval, prepost=True)
 
     if not close_only:
         if interval[1:] == "m" or interval[1:] == "h":
@@ -60,9 +60,11 @@ def get_stock(ticker, period, interval, close_only=False):
             dt_all_str = [d.strftime("%Y-%m") for d in dt_all.tolist()]
 
         dt_breaks = [d for d in dt_all_str if not d in stock_data.index.tolist()]
+        stock_data = stock_data.loc[stock_data["Close"] != 0]
         return stock_data, dt_breaks
 
     else :
+        stock_data = stock_data.loc[stock_data["Close"] != 0]
         return stock_data["Close"].values
 
 def get_metric(data, forecast):
@@ -90,7 +92,7 @@ def line_coloring(data):
     else:
         return "green"
 
-def make_graph(data, datebreaks, interval, chart_type):
+def make_graph(data, datebreaks, interval, chart_type, ma_arr):
     if interval[1:] == "m":
         dval = int(interval[0])
     elif interval[1:] == "h":
@@ -101,6 +103,8 @@ def make_graph(data, datebreaks, interval, chart_type):
         dval = int(interval[0])*60*24*7
     else :
         dval = int(interval[0])*60*24*30
+    
+    data = add_ma(data, ma_arr)
     
     if chart_type == "Candlestick":
         fig = go.Figure(data=[go.Candlestick(x=data.index,
@@ -115,4 +119,15 @@ def make_graph(data, datebreaks, interval, chart_type):
                       autosize=True, template='plotly_dark',
                       xaxis_rangeslider_visible=False)
     fig.update_xaxes(rangebreaks=[{"values":datebreaks, "dvalue": dval*60*1000}])
+    
+    if ma_arr is not None :
+        for ma in ma_arr :
+            fig.add_trace(go.Scatter(x=data.index, y=data[str(ma)+"MA"], name=str(ma)+"MA"))
+    
     return fig
+
+def add_ma(data, window_size) :
+    if window_size is not None :
+        for w in window_size :
+            data[str(w)+"MA"] = data["Close"].rolling(window=w).mean()
+    return data
