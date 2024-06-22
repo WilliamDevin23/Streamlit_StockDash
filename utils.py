@@ -104,17 +104,18 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr):
     else :
         dval = int(interval[0])*60*24*30
     
-    data = add_ma(data, ma_arr)
+    new_data = data.copy()
+    new_data = add_ma(new_data, ma_arr)
     
     if chart_type == "Candlestick":
-        fig = go.Figure(data=[go.Candlestick(x=data.index,
-                        open=data["Open"], close=data["Close"],
-                        high=data["High"], low=data["Low"])])
+        fig = go.Figure(data=[go.Candlestick(x=new_data.index,
+                        open=new_data["Open"], close=new_data["Close"],
+                        high=new_data["High"], low=new_data["Low"])])
     else :
-        data_arr = data["Open"].tolist()[:1] + data["Close"].tolist()[1:]
+        data_arr = new_data["Open"].tolist()[:1] + new_data["Close"].tolist()[1:]
         color = line_coloring(data_arr)
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=data.index, y=data_arr, line=dict(color=color, width=3)))
+        fig.add_trace(go.Scatter(x=new_data.index, y=data_arr, line=dict(color=color, width=3)))
     fig.update_layout(margin={"b":8, "t":8, "l":8, "r":8},
                       autosize=True, template='plotly_dark',
                       xaxis_rangeslider_visible=False)
@@ -122,7 +123,7 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr):
     
     if ma_arr is not None :
         for ma in ma_arr :
-            fig.add_trace(go.Scatter(x=data.index, y=data[str(ma)+"MA"], name=str(ma)+"MA"))
+            fig.add_trace(go.Scatter(x=new_data.index, y=new_data[str(ma)+"MA"], name=str(ma)+"MA"))
     
     return fig
 

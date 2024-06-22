@@ -43,7 +43,7 @@ def main() :
     
     placeholder = st.empty()
 
-    def update_data() :
+    def update_data(ma_arr) :
         
         global stock_data, stock_metric, pred, datebreaks
         
@@ -69,10 +69,10 @@ def main() :
                             value="Rp {0}".format(stock_metric['Close']),
                             delta="{0} ({1} %)".format(stock_metric['Diff'], stock_metric['Percent']))
 
-                fig = make_graph(stock_data, datebreaks, st.session_state.interval_filter, st.session_state.chart_type, st.session_state.moving_avgs)
+                fig = make_graph(stock_data, datebreaks, st.session_state.interval_filter, st.session_state.chart_type, ma_arr)
                 st.plotly_chart(fig, use_container_width=True)
     
-    update_data()
+    update_data(st.session_state.moving_avgs)
             
     with pred :
         time_dict = {"5m":"5 Minutes", "1h":"1 Hour",
@@ -126,14 +126,14 @@ def main() :
                 ma = st.number_input(label="Add MA", format="%d", step=1)
                 if st.form_submit_button("Add") :
                     st.session_state.moving_avgs.append(ma)
-                    fig = make_graph(stock_data, datebreaks, st.session_state.interval_filter, st.session_state.chart_type, st.session_state.moving_avgs)
+                    update_data(st.session_state.moving_avgs)
         with rm :
             with st.form(key='rm-ma-form') :
                 rm_ma = st.number_input(label="Remove MA", format="%d", step=1)
-                if st.form_submit_button("Remove") :
+                if st.form_submit_button("Remove") and rm_ma in st.session_state.moving_avgs:
                     st.session_state.moving_avgs.remove(rm_ma)
-                    fig = make_graph(stock_data, datebreaks, st.session_state.interval_filter, st.session_state.chart_type, st.session_state.moving_avgs)
-        
+                    update_data(st.session_state.moving_avgs)
+
     st.subheader("Predictions")
     st.metric(label="Predicted Close Price Today",
                 value="Rp {0}".format(forecast),
