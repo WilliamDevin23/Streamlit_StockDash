@@ -1,5 +1,6 @@
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import numpy as np
 import pandas as pd
 import yfinance as yf
 import requests
@@ -106,6 +107,8 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr):
         dval = int(interval[0])*60*24*30
     
     new_data = data.copy()
+    volume_color = np.where(new_data["Close"] >= new_data["Open"], "green", "red")
+    volume_color[0] = "green" if new_data["Open"].values[0] <= new_data["Close"].values[0] else "red"
     new_data = add_ma(new_data, ma_arr)
     
     data_arr = new_data["Open"].tolist()[:1] + new_data["Close"].tolist()[1:]
@@ -116,16 +119,16 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr):
         if chart_type == "Candlestick":
             fig.add_trace(go.Candlestick(x=new_data.index,
                         open=new_data["Open"], close=new_data["Close"],
-                        high=new_data["High"], low=new_data["Low"], showlegend=False), row=1, col=1)
+                        high=new_data["High"], low=new_data["Low"], showlegend=False, name="Price", increasing_line_color='green', decreasing_line_color='red'), row=1, col=1)
         else :
             fig.add_trace(go.Scatter(x=new_data.index, y=data_arr, line=dict(color=color, width=3)), row=1, col=1)
-        fig.add_trace(go.Bar(x=data.index, y=data["Volume"], showlegend=False), row=2, col=1)
+        fig.add_trace(go.Bar(x=data.index, y=data["Volume"], showlegend=False, marker_color=volume_color, name="Volume"), row=2, col=1)
     else :
         fig = go.Figure()
         if chart_type == "Candlestick":
             fig.add_trace(go.Candlestick(x=new_data.index,
                         open=new_data["Open"], close=new_data["Close"],
-                        high=new_data["High"], low=new_data["Low"], showlegend=False))
+                        high=new_data["High"], low=new_data["Low"], showlegend=False, name="Price", increasing_line_color='green', decreasing_line_color='red'))
         else :
             fig.add_trace(go.Scatter(x=new_data.index, y=data_arr, line=dict(color=color, width=3)))
     
