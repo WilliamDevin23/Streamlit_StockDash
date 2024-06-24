@@ -159,6 +159,7 @@ def main() :
         if st.button("Clear") :
             st.session_state.moving_avgs = []
             st.session_state.horizontals = []
+            update_data(st.session_state.moving_args, st.session_state.horizontals)
 
     st.markdown("<h3 style='text-align:center; margin: 3px 0px;'>Predictions</h3>", unsafe_allow_html=True)
     st.metric(label="Predicted Close Price Today",
