@@ -6,7 +6,7 @@ from datetime import datetime
 import pytz
 
 st.set_page_config(layout='wide')
-st.markdown("<style>div.modebar { left:0%; } button[title='View fullscreen'] { position: absolute; left: -5%; }</style>", unsafe_allow_html=True)
+st.markdown("<style>div.modebar { left:3%; } button[title='View fullscreen'] { position: absolute; left: -5%; }</style>", unsafe_allow_html=True)
 
 def main() :
     
@@ -25,6 +25,7 @@ def main() :
     def new_code():
         if st.session_state.new_code[:4] != st.session_state.code:
             st.session_state.code = st.session_state.new_code[:4]
+            st.session_state.horizontals = []
     
     # Forecasting
     if st.session_state.code == "IHSG":
@@ -47,10 +48,10 @@ def main() :
 
     def update_data(ma_arr, h_lines) :
         
-        global stock_data, stock_metric, pred, datebreaks
+        global stock_data, stock_metric, util, datebreaks
         
         with placeholder.container():
-            graph, pred = st.columns([0.7, 0.3], gap='small')
+            graph, util = st.columns([0.7, 0.3], gap='small')
         
             with graph :
                 col1, col2 = st.columns(2)
@@ -59,30 +60,42 @@ def main() :
                     st.write(name)
                 
                 if st.session_state.code == "IHSG":
-                        stock_data, datebreaks = get_stock("^JKSE", st.session_state.period_filter,
-                                                        st.session_state.interval_filter)
+                        stock_data, datebreaks = get_stock("^JKSE",
+                                                           st.session_state.period_filter,
+                                                           st.session_state.interval_filter)
                 else :
-                    stock_data, datebreaks = get_stock(st.session_state.code+".JK", st.session_state.period_filter,
-                                                    st.session_state.interval_filter)
+                    stock_data, datebreaks = get_stock(st.session_state.code+".JK",
+                                                       st.session_state.period_filter,
+                                                       st.session_state.interval_filter)
 
                 stock_metric = get_metric(stock_data, forecast)
                 
                 col2.metric(label="Close Price",
                             value="Rp {0}".format(stock_metric['Close']),
-                            delta="{0} ({1} %)".format(stock_metric['Diff'], stock_metric['Percent']))
+                            delta="{0} ({1} %)".format(stock_metric['Diff'],
+                                                       stock_metric['Percent']))
 
-                fig = make_graph(stock_data, datebreaks, st.session_state.interval_filter, st.session_state.chart_type, ma_arr)
+                fig = make_graph(stock_data, datebreaks,
+                                 st.session_state.interval_filter,
+                                 st.session_state.chart_type, ma_arr)
                 if st.session_state.interval_filter == "m" or st.session_state.interval_filter == "h" :
                     for h in h_lines :
-                        fig.add_hline(h, line_color='white', annotation_text=h, annotation_position='bottom right', annotation_font_color='white')
+                        fig.add_hline(h, line_color='white',
+                                      annotation_text=h,
+                                      annotation_position='bottom right',
+                                      annotation_font_color='white')
                 else :
                     for h in h_lines :
-                        fig.add_hline(h, line_color='white', annotation_text=h, annotation_position='bottom right', annotation_font_color='white', row=1, col=1)
+                        fig.add_hline(h, line_color='white',
+                                      annotation_text=h,
+                                      annotation_position='bottom right',
+                                      annotation_font_color='white', row=1, col=1)
+
                 st.plotly_chart(fig, use_container_width=True)
     
     update_data(st.session_state.moving_avgs, st.session_state.horizontals)
             
-    with pred :
+    with util :
         time_dict = {"5m":"5 Minutes", "1h":"1 Hour",
                     "1d":"1 Day", "1wk":"1 Week",
                     "1mo":"1 Month", "1y":"1 Year", "1mo":"1 Month",
@@ -128,33 +141,24 @@ def main() :
         st.selectbox("Interval", intervals, format_func=format_func,
                     key="new_interval", on_change=update_interval)
         
-        add, rm = st.columns([0.45, 0.55], gap='small')
-        with add :
+        add_ma, add_line = st.columns(2, gap='small')
+        with add_ma :
             with st.form(key='add-ma-form') :
                 ma = st.number_input(label="Add MA", format="%d", step=1)
                 if st.form_submit_button("Add") :
                     st.session_state.moving_avgs.append(ma)
                     update_data(st.session_state.moving_avgs, st.session_state.horizontals)
-        with rm :
-            with st.form(key='rm-ma-form') :
-                rm_ma = st.number_input(label="Remove MA", format="%d", step=1)
-                if st.form_submit_button("Remove") and rm_ma in st.session_state.moving_avgs:
-                    st.session_state.moving_avgs.remove(rm_ma)
-                    update_data(st.session_state.moving_avgs, st.session_state.horizontals)
         
-        add_line, rm_line = st.columns([0.45, 0.55], gap='small')
         with add_line :
             with st.form(key='horizontal-form') :
-                h = st.number_input(label="Add Horizontal Line", format="%d", step=1)
+                h = st.number_input(label="Add HLine", format="%d", step=1)
                 if st.form_submit_button("Add") :
                     st.session_state.horizontals.append(h)
                     update_data(st.session_state.moving_avgs, st.session_state.horizontals)
-        with rm_line :
-            with st.form(key='rm-horizontal-form') :
-                rm_h = st.number_input(label="Remove Horizontal Line", format="%d", step=1)
-                if st.form_submit_button("Remove") and rm_h in st.session_state.horizontals:
-                    st.session_state.horizontals.remove(rm_h)
-                    update_data(st.session_state.moving_avgs, st.session_state.horizontals)
+        
+        if st.button("Clear") :
+            st.session_state.moving_avgs = []
+            st.session_state.horizontals = []
 
     st.markdown("<h3 style='text-align:center; margin: 3px 0px;'>Predictions</h3>", unsafe_allow_html=True)
     st.metric(label="Predicted Close Price Today",
@@ -165,7 +169,11 @@ def main() :
     st.write(stock_data)
     
     while jkt_hour >= 9 and jkt_hour <= 16 and not (jkt_day == "Saturday" or jkt_day == "Sunday") :
-        update_data(st.session_state.moving_avgs, st.session_state.horizontals)
-        time.sleep(30)
+        if fig.layout.dragmode != 'drawline' :
+            update_data(st.session_state.moving_avgs, st.session_state.horizontals)
+            time.sleep(30)
+        else :
+            break
+
 if __name__ == "__main__":
     main()

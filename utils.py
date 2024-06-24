@@ -134,17 +134,18 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr):
     
     fig.update_layout(margin={"b":8, "t":8, "l":8, "r":8},
                       autosize=True, template='plotly_dark',
-                      xaxis_rangeslider_visible=False)
+                      xaxis_rangeslider_visible=False,
+                      modebar_add = ['drawline', 'eraseshape'],
+                      modebar_remove = ['lasso2d', 'select2d', 'zoomIn2d', 'zoomOut2d'])
     fig.update_xaxes(rangebreaks=[{"values":datebreaks, "dvalue": dval*60*1000}])
     
     if ma_arr is not None :
         for ma in ma_arr :
-            fig.add_trace(go.Scatter(x=new_data.index, y=new_data[str(ma)+"MA"], name=str(ma)+"MA"))
-    
+            fig.add_trace(go.Scatter(x=new_data.index, y=new_data["MA "+str(ma)], name="MA "+str(ma)))
     return fig
 
 def add_ma(data, window_size) :
     if window_size is not None :
         for w in window_size :
-            data[str(w)+"MA"] = data["Close"].rolling(window=w).mean()
+            data["MA "+str(w)] = data["Close"].rolling(window=w).mean()
     return data
