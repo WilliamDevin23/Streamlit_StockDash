@@ -48,7 +48,7 @@ def main() :
 
     def update_data(ma_arr, h_lines) :
         
-        global stock_data, stock_metric, util, datebreaks
+        global stock_data, stock_metric, util, datebreaks, fig
         
         with placeholder.container():
             graph, util = st.columns([0.7, 0.3], gap='small')
