@@ -156,25 +156,35 @@ def main() :
                     st.session_state.horizontals.append(h)
                     update_data(st.session_state.moving_avgs, st.session_state.horizontals)
         
-        if st.button("Clear") :
-            st.session_state.moving_avgs = []
-            st.session_state.horizontals = []
-            update_data(st.session_state.moving_avgs, st.session_state.horizontals)
-
+        button1, button2 = st.columns(2)
+        with button1 :
+            if st.button("Clear MA") :
+                st.session_state.moving_avgs = []
+                update_data(st.session_state.moving_avgs, st.session_state.horizontals)
+        
+        with button2 :
+            if st.button("Clear Lines") :
+                st.session_state.horizontals = []
+                update_data(st.session_state.moving_avgs, st.session_state.horizontals)
+    
     st.markdown("<h3 style='text-align:center; margin: 3px 0px;'>Predictions</h3>", unsafe_allow_html=True)
     st.metric(label="Predicted Close Price Today",
-                value="Rp {0}".format(forecast),
-                delta="{0} ({1} %)".format(stock_metric['Diff Forecast'], stock_metric['Percent Forecast']))
-                
-    st.markdown("<h3 style='text-align:center;'>Download as CSV</h3>", unsafe_allow_html=True)
-    st.write(stock_data)
+              value="Rp {0}".format(forecast),
+              delta="{0} ({1} %)".format(stock_metric['Diff Forecast'], stock_metric['Percent Forecast']))
+    
+    table_placeholder = st.empty()
+    def update_table() :
+        with table_placeholder :
+            st.markdown("<h3 style='text-align:center;'>Download as CSV</h3>", unsafe_allow_html=True)
+            st.write(stock_data)
+    
+    update_table()
     
     while jkt_hour >= 9 and jkt_hour <= 16 and not (jkt_day == "Saturday" or jkt_day == "Sunday") :
-        if fig.layout.dragmode != 'drawline' :
-            update_data(st.session_state.moving_avgs, st.session_state.horizontals)
-            time.sleep(30)
-        else :
-            break
+        update_data(st.session_state.moving_avgs, st.session_state.horizontals)
+        update_table()
+        time.sleep(30)
+        
 
 if __name__ == "__main__":
     main()
