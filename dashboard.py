@@ -143,14 +143,14 @@ def main() :
         
         add_ma, add_line = st.columns(2, gap='small')
         with add_ma :
-            with st.form(key='add-ma-form') :
+            with st.form(key='add-ma-form', clear_on_submit=True) :
                 ma = st.number_input(label="Add MA", format="%d", step=1)
                 if st.form_submit_button("Add") :
                     st.session_state.moving_avgs.append(ma)
                     update_data(st.session_state.moving_avgs, st.session_state.horizontals)
         
         with add_line :
-            with st.form(key='horizontal-form') :
+            with st.form(key='horizontal-form', clear_on_submit=True) :
                 h = st.number_input(label="Add HLine", format="%d", step=1)
                 if st.form_submit_button("Add") :
                     st.session_state.horizontals.append(h)
