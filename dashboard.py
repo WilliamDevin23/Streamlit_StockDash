@@ -141,29 +141,33 @@ def main() :
         st.selectbox("Interval", intervals, format_func=format_func,
                     key="new_interval", on_change=update_interval)
         
+        st.divider()
+        
         add_ma, add_line = st.columns(2, gap='small')
         with add_ma :
             with st.form(key='add-ma-form', clear_on_submit=True) :
-                ma = st.number_input(label="Add MA", format="%d", step=1)
-                if st.form_submit_button("Add") :
+                ma = st.number_input(label="Add MA", format="%d", step=1, value=None, min_value=3)
+                if st.form_submit_button("Add", use_container_width=True) :
                     st.session_state.moving_avgs.append(ma)
                     update_data(st.session_state.moving_avgs, st.session_state.horizontals)
         
         with add_line :
             with st.form(key='horizontal-form', clear_on_submit=True) :
-                h = st.number_input(label="Add HLine", format="%d", step=1)
-                if st.form_submit_button("Add") :
+                h = st.number_input(label="Add HLine", format="%d", step=1, value=None, min_value=3)
+                if st.form_submit_button("Add", use_container_width=True) :
                     st.session_state.horizontals.append(h)
                     update_data(st.session_state.moving_avgs, st.session_state.horizontals)
         
+        st.divider()
+        
         button1, button2 = st.columns(2)
         with button1 :
-            if st.button("Clear MA") :
+            if st.button("Clear MA", use_container_width=True) :
                 st.session_state.moving_avgs = []
                 update_data(st.session_state.moving_avgs, st.session_state.horizontals)
         
         with button2 :
-            if st.button("Clear Lines") :
+            if st.button("Clear Lines", use_container_width=True) :
                 st.session_state.horizontals = []
                 update_data(st.session_state.moving_avgs, st.session_state.horizontals)
     
@@ -176,7 +180,7 @@ def main() :
     def update_table() :
         with table_placeholder :
             st.markdown("<h3 style='text-align:center;'>Download as CSV</h3>", unsafe_allow_html=True)
-            st.write(stock_data)
+            st.dataframe(stock_data)
     
     update_table()
     
