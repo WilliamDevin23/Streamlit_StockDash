@@ -176,10 +176,11 @@ def main() :
               value="Rp {0}".format(forecast),
               delta="{0} ({1} %)".format(stock_metric['Diff Forecast'], stock_metric['Percent Forecast']))
     
+    st.markdown("<h3 style='text-align:center;'>Download as CSV</h3>", unsafe_allow_html=True)
+    
     table_placeholder = st.empty()
     def update_table() :
         with table_placeholder :
-            st.markdown("<h3 style='text-align:center;'>Download as CSV</h3>", unsafe_allow_html=True)
             st.dataframe(stock_data)
     
     update_table()

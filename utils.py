@@ -123,6 +123,7 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr):
         else :
             fig.add_trace(go.Scatter(x=new_data.index, y=data_arr, line=dict(color=color, width=3)), row=1, col=1)
         fig.add_trace(go.Bar(x=data.index, y=data["Volume"], showlegend=False, marker_color=volume_color, name="Volume"), row=2, col=1)
+
     else :
         fig = go.Figure()
         if chart_type == "Candlestick":
@@ -136,12 +137,14 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr):
                       autosize=True, template='plotly_dark',
                       xaxis_rangeslider_visible=False,
                       modebar_add = ['drawline', 'eraseshape'],
-                      modebar_remove = ['lasso2d', 'select2d', 'zoomIn2d', 'zoomOut2d'])
+                      modebar_remove = ['lasso2d', 'select2d', 'zoomIn2d', 'zoomOut2d'],
+                      legend=dict(yanchor='top', xanchor='right', x=0.99, y=0.99))
     fig.update_xaxes(rangebreaks=[{"values":datebreaks, "dvalue": dval*60*1000}])
     
     if ma_arr is not None :
         for ma in ma_arr :
-            fig.add_trace(go.Scatter(x=new_data.index, y=new_data["MA "+str(ma)], name="MA "+str(ma)))
+            color = getcolor()
+            fig.add_trace(go.Scatter(x=new_data.index, y=new_data["MA "+str(ma)], name="MA "+str(ma), marker={'color':color}))
     return fig
 
 def add_ma(data, window_size) :
@@ -149,3 +152,11 @@ def add_ma(data, window_size) :
         for w in window_size :
             data["MA "+str(w)] = data["Close"].rolling(window=w).mean()
     return data
+
+def getcolor():
+    red = np.random.randint(low=100, high=150)
+    green = np.random.randint(low=100, high=150)
+    blue = np.random.randint(low=100, high=255)
+    
+    rgba = 'rgba({r}, {g}, {b}, {a})'.format(r=red, g=green, b=blue, a=1.0)
+    return rgba
