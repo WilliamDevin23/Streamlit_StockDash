@@ -94,7 +94,7 @@ def line_coloring(data):
     else:
         return "green"
 
-def make_graph(data, datebreaks, interval, chart_type, ma_arr):
+def make_graph(data, datebreaks, interval, chart_type, ma_arr, colors, size=3):
     if interval[1:] == "m":
         dval = int(interval[0])
     elif interval[1:] == "h":
@@ -141,10 +141,9 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr):
                       legend=dict(yanchor='top', xanchor='right', x=0.99, y=0.99))
     fig.update_xaxes(rangebreaks=[{"values":datebreaks, "dvalue": dval*60*1000}])
     
-    if ma_arr is not None :
-        for ma in ma_arr :
-            color = getcolor()
-            fig.add_trace(go.Scatter(x=new_data.index, y=new_data["MA "+str(ma)], name="MA "+str(ma), marker={'color':color}))
+    if ma_arr is not None and colors is not None:
+        for ma, color in zip(ma_arr, colors) :
+            fig.add_trace(go.Scatter(x=new_data.index, y=new_data["MA "+str(ma)], name="MA "+str(ma), marker={'color':color, 'size':size}))
     return fig
 
 def add_ma(data, window_size) :
@@ -154,9 +153,11 @@ def add_ma(data, window_size) :
     return data
 
 def getcolor():
-    red = np.random.randint(low=100, high=150)
-    green = np.random.randint(low=100, high=150)
-    blue = np.random.randint(low=100, high=255)
+    color_vals = np.arange(200, 256)
+    np.random.seed(8)
+    red = np.random.choice(color_vals, replace=False)
+    green = np.random.choice(color_vals, replace=False)
+    blue = np.random.choice(color_vals, replace=False)
     
     rgba = 'rgba({r}, {g}, {b}, {a})'.format(r=red, g=green, b=blue, a=1.0)
     return rgba

@@ -21,6 +21,7 @@ def main() :
     if "code" not in st.session_state : st.session_state.code = "IHSG"
     if "moving_avgs" not in st.session_state : st.session_state.moving_avgs = []
     if "horizontals" not in st.session_state : st.session_state.horizontals = []
+    if "color" not in st.session_state : st.session_state.color = []
 
     def new_code():
         if st.session_state.new_code[:4] != st.session_state.code:
@@ -46,7 +47,7 @@ def main() :
     
     placeholder = st.empty()
 
-    def update_data(ma_arr, h_lines) :
+    def update_data(ma_arr, colors, h_lines) :
         
         global stock_data, stock_metric, util, datebreaks, fig
         
@@ -77,7 +78,7 @@ def main() :
 
                 fig = make_graph(stock_data, datebreaks,
                                  st.session_state.interval_filter,
-                                 st.session_state.chart_type, ma_arr)
+                                 st.session_state.chart_type, ma_arr, colors)
                 if st.session_state.interval_filter == "m" or st.session_state.interval_filter == "h" :
                     for h in h_lines :
                         fig.add_hline(h, line_color='white',
@@ -93,7 +94,7 @@ def main() :
 
                 st.plotly_chart(fig, use_container_width=True)
     
-    update_data(st.session_state.moving_avgs, st.session_state.horizontals)
+    update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
             
     with util :
         time_dict = {"5m":"5 Minutes", "1h":"1 Hour",
@@ -149,14 +150,15 @@ def main() :
                 ma = st.number_input(label="Add MA", format="%d", step=1, value=None, min_value=3)
                 if st.form_submit_button("Add", use_container_width=True) :
                     st.session_state.moving_avgs.append(ma)
-                    update_data(st.session_state.moving_avgs, st.session_state.horizontals)
+                    st.session_state.color.append(getcolor())
+                    update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
         
         with add_line :
             with st.form(key='horizontal-form', clear_on_submit=True) :
                 h = st.number_input(label="Add HLine", format="%d", step=1, value=None, min_value=3)
                 if st.form_submit_button("Add", use_container_width=True) :
                     st.session_state.horizontals.append(h)
-                    update_data(st.session_state.moving_avgs, st.session_state.horizontals)
+                    update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
         
         st.divider()
         
@@ -164,7 +166,8 @@ def main() :
         with button1 :
             if st.button("Clear MA", use_container_width=True) :
                 st.session_state.moving_avgs = []
-                update_data(st.session_state.moving_avgs, st.session_state.horizontals)
+                st.session_state.color = []
+                update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
         
         with button2 :
             if st.button("Clear Lines", use_container_width=True) :
@@ -186,7 +189,7 @@ def main() :
     update_table()
     
     while jkt_hour >= 9 and jkt_hour <= 16 and not (jkt_day == "Saturday" or jkt_day == "Sunday") :
-        update_data(st.session_state.moving_avgs, st.session_state.horizontals)
+        update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
         update_table()
         time.sleep(30)
         
