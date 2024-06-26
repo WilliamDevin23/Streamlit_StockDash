@@ -153,8 +153,7 @@ def add_ma(data, window_size) :
     return data
 
 def getcolor():
-    color_vals = np.arange(200, 256)
-    np.random.seed(8)
+    color_vals = np.arange(200, 256, step=5)
     red = np.random.choice(color_vals, replace=False)
     green = np.random.choice(color_vals, replace=False)
     blue = np.random.choice(color_vals, replace=False)
