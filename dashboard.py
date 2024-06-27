@@ -22,6 +22,9 @@ def main() :
     if "moving_avgs" not in st.session_state : st.session_state.moving_avgs = []
     if "horizontals" not in st.session_state : st.session_state.horizontals = []
     if "color" not in st.session_state : st.session_state.color = []
+    if "ma_disable" not in st.session_state : st.session_state.ma_disable = True
+    if "h_disable" not in st.session_state : st.session_state.h_disable = True
+    if "realtime" not in st.session_state : st.session_state.realtime = True
 
     def new_code():
         if st.session_state.new_code[:4] != st.session_state.code:
@@ -40,10 +43,12 @@ def main() :
 
     st.markdown("<h1 style='text-align: center'>Indonesian Stock Exchange Dashboard</h1>", unsafe_allow_html=True)
     option = st.selectbox("IDX Stocks",
-                          get_idx(), key="new_code",
+                          get_idx(), key="new_mode",
                           on_change=new_code)
     code = option[:4]
     name = option[5:]
+    
+    realtime = st.toggle("Auto Update", value=True)
     
     placeholder = st.empty()
 
@@ -61,9 +66,9 @@ def main() :
                     st.write(name)
                 
                 if st.session_state.code == "IHSG":
-                        stock_data, datebreaks = get_stock("^JKSE",
-                                                           st.session_state.period_filter,
-                                                           st.session_state.interval_filter)
+                    stock_data, datebreaks = get_stock("^JKSE",
+                                                       st.session_state.period_filter,
+                                                       st.session_state.interval_filter)
                 else :
                     stock_data, datebreaks = get_stock(st.session_state.code+".JK",
                                                        st.session_state.period_filter,
@@ -79,6 +84,7 @@ def main() :
                 fig = make_graph(stock_data, datebreaks,
                                  st.session_state.interval_filter,
                                  st.session_state.chart_type, ma_arr, colors)
+                                 
                 if st.session_state.interval_filter == "m" or st.session_state.interval_filter == "h" :
                     for h in h_lines :
                         fig.add_hline(h, line_color='white',
@@ -91,16 +97,18 @@ def main() :
                                       annotation_text=h,
                                       annotation_position='bottom right',
                                       annotation_font_color='white', row=1, col=1)
-
+                hover_bg_color = ["green" if close > open else "red" for open, close in zip(stock_data["Open"].values, stock_data["Close"].values) ]
+                fig.update_traces(hoverlabel=dict(bgcolor=hover_bg_color), selector=dict(type="candlestick"))
+                fig.update_traces(hoverinfo="none", selector=dict(type="scatter"))
                 st.plotly_chart(fig, use_container_width=True)
-    
+        
     update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
-            
+    
     with util :
         time_dict = {"5m":"5 Minutes", "1h":"1 Hour",
                     "1d":"1 Day", "1wk":"1 Week",
                     "1mo":"1 Month", "1y":"1 Year", "1mo":"1 Month",
-                    "5y":"5 Years", "max":"All"}
+                    "3y":"3 Years", "5y":"5 Years"}
 
         def format_func(choice):
             return time_dict[choice]
@@ -129,7 +137,7 @@ def main() :
         st.selectbox("Chart Type", ["Candlestick", "Line"],
                     key="update_chart_type", on_change=update_chart_type)
 
-        st.selectbox("Period", ["1d", "1mo", "1y", "5y", "max"], format_func=format_func,
+        st.selectbox("Period", ["1d", "1mo", "1y", "3y", "5y"], format_func=format_func,
                     key="new_period", on_change=update_period)
 
         intervals = ["5m", "1h", "1d", "1wk", "1mo"]
@@ -149,8 +157,11 @@ def main() :
             with st.form(key='add-ma-form', clear_on_submit=True) :
                 ma = st.number_input(label="Add MA", format="%d", step=1, value=None, min_value=3)
                 if st.form_submit_button("Add", use_container_width=True) :
+                    color_arr = getcolor()
+                    color = np.random.choice(color_arr, replace=False)
                     st.session_state.moving_avgs.append(ma)
-                    st.session_state.color.append(getcolor())
+                    st.session_state.color.append(color)
+                    st.session_state.ma_disable = False
                     update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
         
         with add_line :
@@ -158,21 +169,28 @@ def main() :
                 h = st.number_input(label="Add HLine", format="%d", step=1, value=None, min_value=3)
                 if st.form_submit_button("Add", use_container_width=True) :
                     st.session_state.horizontals.append(h)
+                    st.session_state.h_disable = False
                     update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
         
         st.divider()
         
+        def clear_ma() :
+            st.session_state.moving_avgs = []
+            st.session_state.color = []
+            st.session_state.ma_disable = True
+            update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
+        
+        def clear_horizontals() :
+            st.session_state.horizontals = []
+            st.session_state.h_disable = True
+            update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
+        
         button1, button2 = st.columns(2)
         with button1 :
-            if st.button("Clear MA", use_container_width=True) :
-                st.session_state.moving_avgs = []
-                st.session_state.color = []
-                update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
+            st.button("Clear MA", use_container_width=True, disabled = st.session_state.ma_disable, on_click=clear_ma)
         
         with button2 :
-            if st.button("Clear Lines", use_container_width=True) :
-                st.session_state.horizontals = []
-                update_data(st.session_state.moving_avgs, st.session_state.horizontals)
+            st.button("Clear Lines", use_container_width=True, disabled = st.session_state.h_disable, on_click=clear_horizontals)
     
     st.markdown("<h3 style='text-align:center; margin: 3px 0px;'>Predictions</h3>", unsafe_allow_html=True)
     st.metric(label="Predicted Close Price Today",
@@ -188,7 +206,8 @@ def main() :
     
     update_table()
     
-    while jkt_hour >= 9 and jkt_hour <= 16 and not (jkt_day == "Saturday" or jkt_day == "Sunday") :
+    while True and realtime :
+    #while (jkt_hour >= 9 and jkt_hour <= 16) and realtime and not (jkt_day == "Saturday" or jkt_day == "Sunday") :
         update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
         update_table()
         time.sleep(30)

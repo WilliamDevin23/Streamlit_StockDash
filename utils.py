@@ -138,12 +138,14 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr, colors, size=3):
                       xaxis_rangeslider_visible=False,
                       modebar_add = ['drawline', 'eraseshape'],
                       modebar_remove = ['lasso2d', 'select2d', 'zoomIn2d', 'zoomOut2d'],
-                      legend=dict(yanchor='top', xanchor='right', x=0.99, y=0.99))
+                      legend=dict(yanchor='top', xanchor='right', x=0.99, y=0.99),
+                      hovermode='x')
     fig.update_xaxes(rangebreaks=[{"values":datebreaks, "dvalue": dval*60*1000}])
     
     if ma_arr is not None and colors is not None:
         for ma, color in zip(ma_arr, colors) :
-            fig.add_trace(go.Scatter(x=new_data.index, y=new_data["MA "+str(ma)], name="MA "+str(ma), marker={'color':color, 'size':size}))
+            fig.add_trace(go.Scatter(x=new_data.index, y=new_data["MA "+str(ma)], name="MA "+str(ma), 
+                                     marker={'color':color, 'size':size}, hoverinfo='skip'))
     return fig
 
 def add_ma(data, window_size) :
@@ -153,10 +155,6 @@ def add_ma(data, window_size) :
     return data
 
 def getcolor():
-    color_vals = np.arange(200, 256, step=5)
-    red = np.random.choice(color_vals, replace=False)
-    green = np.random.choice(color_vals, replace=False)
-    blue = np.random.choice(color_vals, replace=False)
-    
-    rgba = 'rgba({r}, {g}, {b}, {a})'.format(r=red, g=green, b=blue, a=1.0)
-    return rgba
+    color=['antiquewhite', 'aliceblue', 'blue', 'cyan', 'gray', 'gold', 'hotpink', 'lavender', 'lightgreen', 'magenta', 'orange']
+
+    return color
