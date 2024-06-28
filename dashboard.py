@@ -206,8 +206,7 @@ def main() :
     
     update_table()
     
-    while True and realtime :
-    #while (jkt_hour >= 9 and jkt_hour <= 16) and realtime and not (jkt_day == "Saturday" or jkt_day == "Sunday") :
+    while (jkt_hour >= 9 and jkt_hour <= 16) and realtime and not (jkt_day == "Saturday" or jkt_day == "Sunday") :
         update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
         update_table()
         time.sleep(30)
