@@ -6,6 +6,7 @@ import yfinance as yf
 import requests
 from bs4 import BeautifulSoup
 from requests_ratelimiter import LimiterSession
+from data_preprocessing import prepare_data
 
 session = LimiterSession(per_minute=12)
 
@@ -26,11 +27,11 @@ def get_idx():
         companies.append(code + name)
     return ['IHSG (Indeks Harga Saham Gabungan)'] + sorted(companies)
 
-def get_stock(ticker, period, interval, close_only=False):
+def get_stock(ticker, period, interval, for_predict=False):
     stock = yf.Ticker(ticker, session=session)
     stock_data = stock.history(period=period, interval=interval, prepost=True)
 
-    if not close_only:
+    if not for_predict:
         if interval[1:] == "m" or interval[1:] == "h":
             stock_data.index = stock_data.index.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -66,8 +67,8 @@ def get_stock(ticker, period, interval, close_only=False):
         return stock_data, dt_breaks
 
     else :
-        stock_data = stock_data.loc[stock_data["Close"] != 0]
-        return stock_data["Close"].values
+        stock_data = prepare_data(stock_data)
+        return stock_data
 
 def get_metric(data, forecast):
     stat = {}
@@ -75,16 +76,26 @@ def get_metric(data, forecast):
     close_price = round(data["Close"].values[-1], 2)
 
     diff = round(close_price - open_price, 2)
-    diff_forecast = round(forecast - open_price)
-
     diff_percentage = round(diff*100/open_price, 2)
-    diff_percentage_forecast = round(diff_forecast*100/open_price, 2)
+    
+    for f in forecast :
+        diff_forecast = round(f - open_price)
+        diff_percentage_forecast = round(diff_forecast*100/open_price, 2)
+        if "Diff Forecast" not in stat :
+            stat["Diff Forecast"] = []
+            stat["Diff Forecast"].append(diff_forecast)
+        else :
+            stat["Diff Forecast"].append(diff_forecast)
+        
+        if "Percent Forecast" not in stat :
+            stat["Percent Forecast"] = []
+            stat["Percent Forecast"].append(diff_percentage_forecast)
+        else :
+            stat["Percent Forecast"].append(diff_percentage_forecast)
 
     stat["Close"] = close_price
     stat["Diff"] = diff
     stat["Percent"] = diff_percentage
-    stat["Diff Forecast"] = diff_forecast
-    stat["Percent Forecast"] = diff_percentage_forecast
 
     return stat
 
