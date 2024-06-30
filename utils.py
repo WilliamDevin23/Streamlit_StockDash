@@ -7,6 +7,7 @@ import requests
 from bs4 import BeautifulSoup
 from requests_ratelimiter import LimiterSession
 from data_preprocessing import prepare_data
+from prediction import get_forecast_date
 
 session = LimiterSession(per_minute=12)
 
@@ -30,7 +31,8 @@ def get_idx():
 def get_stock(ticker, period, interval, for_predict=False):
     stock = yf.Ticker(ticker, session=session)
     stock_data = stock.history(period=period, interval=interval, prepost=True)
-
+    predicted_days = get_forecast_date()
+    
     if not for_predict:
         if interval[1:] == "m" or interval[1:] == "h":
             stock_data.index = stock_data.index.strftime("%Y-%m-%d %H:%M:%S")
@@ -48,7 +50,7 @@ def get_stock(ticker, period, interval, for_predict=False):
 
             if interval[1:] == "d":
                 dt_all = pd.date_range(start=stock_data.index.tolist()[0],
-                                    end=stock_data.index.tolist()[-1], freq="D")
+                                    end=predicted_days[-1], freq="D")
             if interval[1:] == "wk":
                 dt_all = pd.date_range(start=stock_data.index.tolist()[0],
                                     end=stock_data.index.tolist()[-1], freq="7D")
@@ -61,8 +63,9 @@ def get_stock(ticker, period, interval, for_predict=False):
                                 end=stock_data.index.tolist()[-1], freq="ME")
             
             dt_all_str = [d.strftime("%Y-%m") for d in dt_all.tolist()]
-
-        dt_breaks = [d for d in dt_all_str if not d in stock_data.index.tolist()]
+        
+        
+        dt_breaks = [d for d in dt_all_str if not d in stock_data.index.tolist() and not d in predicted_days]
         stock_data = stock_data.loc[stock_data["Close"] != 0]
         return stock_data, dt_breaks
 
