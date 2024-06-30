@@ -11,6 +11,7 @@ def get_model():
 
 def model_forecast(model, data):
     data = np.expand_dims(data, axis=0)
+    data = tf.convert_to_tensor(data)
     forecast = model.predict(data)
     return forecast
 

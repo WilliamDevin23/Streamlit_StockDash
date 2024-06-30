@@ -39,6 +39,7 @@ def main() :
         daily_data = get_stock(st.session_state.code+".JK", "5y", "1d", for_predict=True)
     model = get_model()
     forecast = predict(model, daily_data)
+    dates = get_forecast_date()
 
     st.markdown("<h1 style='text-align: center'>Indonesian Stock Exchange Dashboard</h1>", unsafe_allow_html=True)
     option = st.selectbox("IDX Stocks",
@@ -99,8 +100,10 @@ def main() :
                 hover_bg_color = ["green" if close > open else "red" for open, close in zip(stock_data["Open"].values, stock_data["Close"].values) ]
                 fig.update_traces(hoverlabel=dict(bgcolor=hover_bg_color), selector=dict(type="candlestick"))
                 fig.update_traces(hoverinfo="none", selector=dict(type="scatter"))
+                if st.session_state.interval_filter = "1d" :
+                    fig.add_trace(go.Scatter(x=dates, y=forecast, line=dict(color='white', width=3), name="Predicted Close Prices"))
                 st.plotly_chart(fig, use_container_width=True)
-        
+            
     update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
     
     with util :
@@ -192,7 +195,6 @@ def main() :
             st.button("Clear Lines", use_container_width=True, disabled = st.session_state.h_disable, on_click=clear_horizontals)
     
     st.markdown("<h3 style='text-align:center; margin: 3px 0px;'>Predictions</h3>", unsafe_allow_html=True)
-    dates = get_forecast_date()
     
     predictions = st.columns(5)
     for i in range(5) :
