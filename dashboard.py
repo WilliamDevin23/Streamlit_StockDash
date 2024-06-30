@@ -43,7 +43,7 @@ def main() :
 
     st.markdown("<h1 style='text-align: center'>Indonesian Stock Exchange Dashboard</h1>", unsafe_allow_html=True)
     option = st.selectbox("IDX Stocks",
-                          get_idx(), key="new_mode",
+                          get_idx(), key="new_code",
                           on_change=new_code)
     code = option[:4]
     name = option[5:]
