@@ -3,30 +3,19 @@ from plotly.subplots import make_subplots
 import numpy as np
 import pandas as pd
 import yfinance as yf
-import requests
-from bs4 import BeautifulSoup
+import streamlit as st
 from requests_ratelimiter import LimiterSession
 from data_preprocessing import prepare_data
 from prediction import get_forecast_date
 
 session = LimiterSession(per_minute=12)
 
-def get_idx():
-    url = "https://id.wikipedia.org/wiki/Daftar_perusahaan_yang_tercatat_di_Bursa_Efek_Indonesia"
-    source = requests.get(url)
-    soup = BeautifulSoup(source.text, 'html.parser')
-
-    # Stock Codes and Names
-    cell = soup.find_all('td')
-    companies = []
-    i = 0
-    while i < len(cell) :
-        code = cell[i].get_text()[5:]
-        i += 1
-        name = " (" + cell[i].get_text().strip() + ")"
-        i += 2
-        companies.append(code + name)
-    return ['IHSG (Indeks Harga Saham Gabungan)'] + sorted(companies)
+def get_codes():
+    conn = st.connection("neon", type="sql")
+    df = conn.query("SELECT * FROM lq45", ttl=0)
+    df["Long Name"] = df["code"] + " " + "(" + df["name"] + ")"
+    choice = list(df["Long Name"].values)
+    return ["IHSG (Indeks Harga Saham Gabungan)", "LQ45 (Liquid 45)"] + sorted(choice)
 
 def get_stock(ticker, period, interval, for_predict=False):
     stock = yf.Ticker(ticker, session=session)

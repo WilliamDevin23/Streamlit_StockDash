@@ -6,7 +6,17 @@ from datetime import datetime, timedelta
 import pytz
 
 st.set_page_config(layout='wide')
-st.markdown("<style>div.modebar { left:3%; } button[title='View fullscreen'] { position: absolute; left: -5%; }</style>", unsafe_allow_html=True)
+st.markdown("""<style>
+                div.modebar {
+                    left:3%;
+                }
+                button[title='View fullscreen'] {
+                    position: absolute; left: -5%;
+                }
+                [data-testid="stMetricValue"] {
+                    font-size: 28px;
+                }
+            </style>""", unsafe_allow_html=True)
 
 def main() :
     
@@ -41,9 +51,9 @@ def main() :
     forecast = predict(model, daily_data)
     dates = get_forecast_date()
 
-    st.markdown("<h1 style='text-align: center'>Indonesian Stock Exchange Dashboard</h1>", unsafe_allow_html=True)
-    option = st.selectbox("IDX Stocks",
-                          get_idx(), key="new_mode",
+    st.markdown("<h1 style='text-align: center'>Indonesian LQ45 Dashboard</h1>", unsafe_allow_html=True)
+    option = st.selectbox("Stock Codes",
+                          get_codes(), key="new_mode",
                           on_change=new_code)
     code = option[:4]
     name = option[5:]
