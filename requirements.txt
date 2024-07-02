@@ -1,10 +1,11 @@
-beautifulsoup4==4.12.3
 numpy==1.26.4
 pandas==2.2.2
 plotly==5.21.0
-Requests==2.31.0
+psycopg2-binary==2.9.9
+pytz==2024.1
 requests_ratelimiter==0.6.0
-scikit_learn==1.4.2
+sqlalchemy==2.0.31
 streamlit==1.31.1
 tensorflow==2.16.1
+tensorflow_intel==2.16.1
 yfinance==0.2.38
