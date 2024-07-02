@@ -45,6 +45,8 @@ def main() :
     # Forecasting
     if st.session_state.code == "IHSG":
         daily_data = get_stock("^JKSE", "5y", "1d", for_predict=True)
+    elif st.session_state.code == "LQ45":
+        daily_data = get_stock("^JKLQ45", "5y", "1d", for_predict=True)
     else:
         daily_data = get_stock(st.session_state.code+".JK", "5y", "1d", for_predict=True)
     model = get_model()
@@ -77,6 +79,10 @@ def main() :
                 
                 if st.session_state.code == "IHSG":
                     stock_data, datebreaks = get_stock("^JKSE",
+                                                       st.session_state.period_filter,
+                                                       st.session_state.interval_filter)
+                elif st.session_state.code == "LQ45":
+                    stock_data, datebreaks = get_stock("^JKLQ45",
                                                        st.session_state.period_filter,
                                                        st.session_state.interval_filter)
                 else :

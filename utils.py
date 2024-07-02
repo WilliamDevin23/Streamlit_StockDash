@@ -139,6 +139,7 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr, colors, size=3):
     fig.update_layout(margin={"b":8, "t":8, "l":8, "r":8},
                       autosize=True, template='plotly_dark',
                       xaxis_rangeslider_visible=False,
+                      xaxis=dict(fixedrange=True),
                       modebar_add = ['drawline', 'eraseshape'],
                       modebar_remove = ['lasso2d', 'select2d', 'zoomIn2d', 'zoomOut2d'],
                       legend=dict(yanchor='top', xanchor='right', x=0.99, y=0.99),
