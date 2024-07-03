@@ -4,6 +4,7 @@ from prediction import *
 import time
 from datetime import datetime, timedelta
 import pytz
+import yfinance as yf
 
 st.set_page_config(layout='wide')
 st.markdown("""<style>
@@ -16,14 +17,17 @@ st.markdown("""<style>
                 [data-testid="stMetricValue"] {
                     font-size: 28px;
                 }
+                [data-testid="stHeading"] {
+                    text-align: center;
+                }
             </style>""", unsafe_allow_html=True)
 
+jkt_tz = pytz.timezone('Asia/Jakarta')
+jkt_date = datetime.now(jkt_tz)
+jkt_hour = int(jkt_date.strftime("%H"))
+jkt_day = jkt_date.strftime("%A")
+
 def main() :
-    
-    jkt_tz = pytz.timezone('Asia/Jakarta')
-    jkt_date = datetime.now(jkt_tz)
-    jkt_hour = int(jkt_date.strftime("%H"))
-    jkt_day = jkt_date.strftime("%A")
     
     #Session states
     if "chart_type" not in st.session_state : st.session_state.chart_type = "Candlestick"
@@ -232,7 +236,22 @@ def main() :
         update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
         update_table()
         time.sleep(30)
-        
+
+def timer(placeholder) :
+    jkt_tz = pytz.timezone('Asia/Jakarta')
+    with placeholder :
+        jkt_now = datetime.now(jkt_tz)
+        open_time = datetime(jkt_now.year, jkt_now.month, jkt_now.day, 9, 15, 0)
+        jkt_now = jkt_now.replace(tzinfo=None)
+        diff = open_time - jkt_now
+        minutes_diff = divmod(diff.seconds, 60)
+        st.header("Market will be open in 00:{:02d}:{:02d}".format(minutes_diff[0], minutes_diff[1]))
+        time.sleep(1)
 
 if __name__ == "__main__":
-    main()
+    if len(yf.Ticker("^JKSE").history("1d")) == 0 :
+        timer_placeholder = st.empty()
+        while jkt_hour < 10 :
+            timer(timer_placeholder)
+    else :
+        main()
