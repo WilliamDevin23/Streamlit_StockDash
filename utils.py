@@ -17,6 +17,11 @@ def get_codes():
     choice = list(df["Long Name"].values)
     return ["IHSG (Indeks Harga Saham Gabungan)", "LQ45 (Liquid 45)"] + sorted(choice)
 
+def get_news(code) :
+    conn = st.connection("neon", type="sql")
+    news_df = conn.query("SELECT * FROM news WHERE code='{}'".format(code))
+    return news_df.values
+
 def get_stock(ticker, period, interval, for_predict=False):
     stock = yf.Ticker(ticker, session=session)
     stock_data = stock.history(period=period, interval=interval, prepost=True)

@@ -4,9 +4,10 @@ import pandas as pd
 from data_preprocessing import *
 from datetime import datetime, timedelta
 import pytz
+import numpy as np
 
 def get_model():
-    model = tf.keras.models.load_model("stock_5prediction.keras")
+    model = tf.keras.models.load_model("stock_10pred.h5")
     return model
 
 def model_forecast(model, data):
@@ -16,7 +17,6 @@ def model_forecast(model, data):
     return forecast
 
 def predict(model, data):
-    data_size = len(data)
     scaled_data = normalize_data(data, data.max(axis=0), data.min(axis=0))
     pred = model_forecast(model, scaled_data[-21:-1, :])
     pred = np.reshape(pred, (-1,))
@@ -34,7 +34,7 @@ def get_forecast_date() :
         jkt_date = jkt_date - timedelta(days=2)
     dates = []
     i = 0
-    while len(dates) < 5 :
+    while len(dates) < 10 :
         if (jkt_date + timedelta(days=1*i)).strftime("%A") not in ['Sunday', 'Saturday'] :
             dates.append((jkt_date + timedelta(days=1*i)).strftime("%Y-%m-%d"))
             i += 1
