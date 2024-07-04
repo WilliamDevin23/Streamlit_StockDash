@@ -124,7 +124,7 @@ def main() :
                     fig.update_traces(hoverlabel=dict(bgcolor=hover_bg_color), selector=dict(type="candlestick"))
                     fig.update_traces(hoverinfo="none", selector=dict(type="scatter"))
                     if st.session_state.interval_filter == "1d" :
-                        fig.add_trace(go.Scatter(x=dates, y=forecast, line=dict(color='white', width=3), name="Predicted Close Prices"))
+                        fig.add_trace(go.Scatter(x=dates, y=forecast, mode='lines', line=dict(color='white', width=3), name="Predicted Close Prices"))
                     st.plotly_chart(fig, use_container_width=True)
                 
         update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
