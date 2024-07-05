@@ -238,10 +238,7 @@ def main() :
         
         update_table()
         
-        while (jkt_hour >= 9 and jkt_hour <= 16) and realtime and not (jkt_day == "Saturday" or jkt_day == "Sunday") :
-            update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
-            update_table()
-            time.sleep(30)
+        
     
     with news :
         news_arr = get_news(code)
@@ -251,6 +248,12 @@ def main() :
                 st.markdown(f"<h3><a href='{news[3]}' style='text-decoration: none;'>{news[1]}</a></h3>", unsafe_allow_html=True)
                 st.write(news[2])
                 st.markdown(f"""<p style='color: gray;'>{news[4]}</p>""", unsafe_allow_html=True)
+    
+    with dashboard :
+        while (jkt_hour >= 9 and jkt_hour <= 16) and realtime and not (jkt_day == "Saturday" or jkt_day == "Sunday") :
+            update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
+            update_table()
+            time.sleep(30)
 
 def timer(placeholder) :
     jkt_tz = pytz.timezone('Asia/Jakarta')
