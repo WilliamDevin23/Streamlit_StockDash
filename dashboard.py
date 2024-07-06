@@ -64,7 +64,7 @@ def main() :
     code = option[:4]
     name = option[5:]
     
-    dashboard, news = st.tabs(["Dashboard", "News"])
+    dashboard, news, download = st.tabs(["Dashboard", "News", "Download Tabular Data"])
     
     with dashboard :
         realtime = st.toggle("Auto Update", value=True)
@@ -229,17 +229,6 @@ def main() :
                           value="Rp {0:.2f}".format(forecast[i+5]),
                           delta="{0} ({1} %)".format(stock_metric['Diff Forecast'][i+5], stock_metric['Percent Forecast'][i+5]))
         
-        st.markdown("<h3 style='text-align:center;'>Download as CSV</h3>", unsafe_allow_html=True)
-        
-        table_placeholder = st.empty()
-        def update_table() :
-            with table_placeholder :
-                st.dataframe(stock_data, use_container_width=True)
-        
-        update_table()
-        
-        
-    
     with news :
         news_arr = get_news(code)
         for news in news_arr :
@@ -248,12 +237,22 @@ def main() :
                 st.markdown(f"<h3><a href='{news[3]}' style='text-decoration: none;'>{news[1]}</a></h3>", unsafe_allow_html=True)
                 st.write(news[2])
                 st.markdown(f"""<p style='color: gray;'>{news[4]}</p>""", unsafe_allow_html=True)
-    
-    with dashboard :
-        while (jkt_hour >= 9 and jkt_hour <= 16) and realtime and not (jkt_day == "Saturday" or jkt_day == "Sunday") :
+                
+    with download :
+        st.markdown("<h3 style='text-align:center;'>Download as CSV</h3>", unsafe_allow_html=True)
+        table_placeholder = st.empty()
+        def update_table() :
+            with table_placeholder :
+                st.dataframe(stock_data, use_container_width=True)
+        
+        update_table()
+
+    while (jkt_hour >= 9 and jkt_hour <= 16) and realtime and not (jkt_day == "Saturday" or jkt_day == "Sunday") :
+        with dashboard :
             update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
+        with download :
             update_table()
-            time.sleep(30)
+        time.sleep(30)
 
 def timer(placeholder) :
     jkt_tz = pytz.timezone('Asia/Jakarta')
