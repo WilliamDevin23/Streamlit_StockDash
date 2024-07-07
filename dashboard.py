@@ -246,6 +246,8 @@ def main() :
                 st.dataframe(stock_data, use_container_width=True)
         
         update_table()
+        st.download_button("Download as CSV", data=stock_data.to_csv(index=False),
+                           file_name="{}_{}.csv".format(st.session_state.code, jkt_date), mime="text/csv")
 
     while (jkt_hour >= 9 and jkt_hour <= 16) and realtime and not (jkt_day == "Saturday" or jkt_day == "Sunday") :
         with dashboard :
