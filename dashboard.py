@@ -25,6 +25,7 @@ st.markdown("""<style>
 jkt_tz = pytz.timezone('Asia/Jakarta')
 jkt_date = datetime.now(jkt_tz)
 jkt_hour = int(jkt_date.strftime("%H"))
+jkt_minute = int(jkt_date.strftime("%M"))
 jkt_day = jkt_date.strftime("%A")
 
 def main() :
@@ -53,6 +54,7 @@ def main() :
         daily_data = get_stock("^JKLQ45", "5y", "1d", for_predict=True)
     else:
         daily_data = get_stock(st.session_state.code+".JK", "5y", "1d", for_predict=True)
+    
     model = get_model()
     forecast = predict(model, daily_data)
     dates = get_forecast_date()
@@ -268,7 +270,7 @@ def timer(placeholder) :
         time.sleep(1)
 
 if __name__ == "__main__":
-    if len(yf.Ticker("^JKSE").history("1d")) == 0 :
+    if jkt_minute >= 0 and jkt_hour <= 9 :
         timer_placeholder = st.empty()
         while jkt_hour < 10 :
             timer(timer_placeholder)
