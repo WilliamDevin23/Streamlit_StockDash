@@ -270,7 +270,7 @@ def timer(placeholder) :
         time.sleep(1)
 
 if __name__ == "__main__":
-    if jkt_minute >= 0 and jkt_hour <= 9 :
+    if 0<= jkt_minute < 15 and jkt_hour <= 9 :
         timer_placeholder = st.empty()
         while jkt_hour < 10 :
             timer(timer_placeholder)
