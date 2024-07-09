@@ -8,7 +8,8 @@ def ma_for_predict(data) :
     
 def stochastic(data) :
     stock_history = data.copy()
-    stock_history["FastK-Stochastic"] = 100*(stock_history["Close"] - stock_history["Low"].rolling(window=20).min())/(stock_history["High"].rolling(window=20).max() - stock_history["Low"].rolling(window=20).min())
+    stock_history["FastK-Stochastic"] = 100*(stock_history["Close"] - stock_history["Low"].rolling(window=20).min())\
+                                        /(stock_history["High"].rolling(window=20).max() - stock_history["Low"].rolling(window=20).min())
     stock_history["K-Stochastic"] = stock_history["FastK-Stochastic"].rolling(window=5).mean()
     stock_history["D-Stochastic"] = stock_history["K-Stochastic"].rolling(window=5).mean()
     stock_history.drop(columns=["FastK-Stochastic"], axis=1, inplace=True)

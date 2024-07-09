@@ -1,5 +1,7 @@
 import streamlit as st
+# Streamlit Wide Layout
 st.set_page_config(layout='wide')
+
 from utils import *
 from prediction import *
 import time
@@ -44,7 +46,7 @@ def main() :
     if "ma_disable" not in st.session_state : st.session_state.ma_disable = True
     if "h_disable" not in st.session_state : st.session_state.h_disable = True
     if "realtime" not in st.session_state : st.session_state.realtime = True
-
+    
     # Function to handle code choice
     def new_code():
         if st.session_state.new_code[:4] != st.session_state.code:
@@ -104,7 +106,7 @@ def main() :
                     # Make 2 columns : first for code name, second for the metric
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.subheader(st.session_state.code)
+                        st.markdown(f"<h3>{st.session_state.code}</h3>", unsafe_allow_html=True)
                         st.write(name)
                     
                     # Handle the selected code due to code alias
@@ -148,11 +150,13 @@ def main() :
                                           annotation_text=h,
                                           annotation_position='bottom right',
                                           annotation_font_color='white', row=1, col=1)
-                    hover_bg_color = ["green" if close > open else "red" for open, close in zip(stock_data["Open"].values, stock_data["Close"].values) ]
+                    hover_bg_color = ["green" if close > open else "red" for open, close in zip(stock_data["Open"].values, stock_data["Close"].values)]
                     fig.update_traces(hoverlabel=dict(bgcolor=hover_bg_color), selector=dict(type="candlestick"))
                     fig.update_traces(hoverinfo="none", selector=dict(type="scatter"))
                     if st.session_state.interval_filter == "1d" :
-                        fig.add_trace(go.Scatter(x=dates, y=forecast, mode='lines', line=dict(color='white', width=3), name="Predicted Close Prices"))
+                        fig.add_trace(go.Scatter(x=dates, y=forecast, mode='lines',
+                                                 line=dict(color=line_coloring(forecast), width=2),
+                                                 name="Predicted Close Prices"))
                     st.plotly_chart(fig, use_container_width=True)
                 
         update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
@@ -204,46 +208,48 @@ def main() :
                         key="new_interval", on_change=update_interval)
             
             st.divider()
-            
-            add_ma, add_line = st.columns(2, gap='small')
-            with add_ma :
-                with st.form(key='add-ma-form', clear_on_submit=True) :
-                    ma = st.number_input(label="Add MA", format="%d", step=1, value=None, min_value=3)
-                    if st.form_submit_button("Add", use_container_width=True) :
-                        color_arr = getcolor()
-                        color = np.random.choice(color_arr, replace=False)
-                        st.session_state.moving_avgs.append(ma)
-                        st.session_state.color.append(color)
-                        st.session_state.ma_disable = False
-                        update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
-            
-            with add_line :
-                with st.form(key='horizontal-form', clear_on_submit=True) :
-                    h = st.number_input(label="Add HLine", format="%d", step=1, value=None, min_value=3)
-                    if st.form_submit_button("Add", use_container_width=True) :
-                        st.session_state.horizontals.append(h)
-                        st.session_state.h_disable = False
-                        update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
-            
-            st.divider()
-            
-            def clear_ma() :
-                st.session_state.moving_avgs = []
-                st.session_state.color = []
-                st.session_state.ma_disable = True
-                update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
-            
-            def clear_horizontals() :
-                st.session_state.horizontals = []
-                st.session_state.h_disable = True
-                update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
-            
-            button1, button2 = st.columns(2)
-            with button1 :
-                st.button("Clear MA", use_container_width=True, disabled = st.session_state.ma_disable, on_click=clear_ma)
-            
-            with button2 :
-                st.button("Clear Lines", use_container_width=True, disabled = st.session_state.h_disable, on_click=clear_horizontals)
+            color_arr = getcolor()
+            with st.popover("Moving Average and Horizontal Lines", use_container_width=True) :
+                add_ma, add_line = st.columns(2, gap='small')
+                with add_ma :
+                    with st.form(key='add-ma-form', clear_on_submit=True) :
+                        ma = st.number_input(label="Add MA", format="%d", step=1, value=None, min_value=3)
+                        if ma is None or ma < 3 :
+                            ma = 3
+                        if st.form_submit_button("Add", disabled=len(st.session_state.color) >= 2, use_container_width=True) :
+                            color = np.random.choice(color_arr, replace=False)
+                            st.session_state.moving_avgs.append(ma)
+                            st.session_state.color.append(color)
+                            st.session_state.ma_disable = False
+                            update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
+                
+                with add_line :
+                    with st.form(key='horizontal-form', clear_on_submit=True) :
+                        h = st.number_input(label="Add HLine", format="%d", step=1, value=None, min_value=3)
+                        if st.form_submit_button("Add", use_container_width=True) :
+                            st.session_state.horizontals.append(h)
+                            st.session_state.h_disable = False
+                            update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
+                
+                st.divider()
+                
+                def clear_ma() :
+                    st.session_state.moving_avgs = []
+                    st.session_state.color = []
+                    st.session_state.ma_disable = True
+                    update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
+                
+                def clear_horizontals() :
+                    st.session_state.horizontals = []
+                    st.session_state.h_disable = True
+                    update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
+                
+                button1, button2 = st.columns(2)
+                with button1 :
+                    st.button("Clear MA", use_container_width=True, disabled = st.session_state.ma_disable, on_click=clear_ma)
+                
+                with button2 :
+                    st.button("Clear Lines", use_container_width=True, disabled = st.session_state.h_disable, on_click=clear_horizontals)
         
         st.markdown("<h3 style='text-align:center; margin: 3px 0px;'>Predictions</h3>", unsafe_allow_html=True)
         
