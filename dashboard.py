@@ -1,4 +1,5 @@
 import streamlit as st
+st.set_page_config(layout='wide')
 from utils import *
 from prediction import *
 import time
@@ -6,7 +7,6 @@ from datetime import datetime, timedelta
 import pytz
 import yfinance as yf
 
-st.set_page_config(layout='wide')
 st.markdown("""<style>
                 div.modebar {
                     left:3%;
@@ -22,12 +22,15 @@ st.markdown("""<style>
                 }
             </style>""", unsafe_allow_html=True)
 
+# Get current time based on timezone
 jkt_tz = pytz.timezone('Asia/Jakarta')
 jkt_date = datetime.now(jkt_tz)
 jkt_hour = int(jkt_date.strftime("%H"))
 jkt_minute = int(jkt_date.strftime("%M"))
 jkt_day = jkt_date.strftime("%A")
 
+
+# Main Application
 def main() :
     
     #Session states
@@ -42,6 +45,7 @@ def main() :
     if "h_disable" not in st.session_state : st.session_state.h_disable = True
     if "realtime" not in st.session_state : st.session_state.realtime = True
 
+    # Function to handle code choice
     def new_code():
         if st.session_state.new_code[:4] != st.session_state.code:
             st.session_state.code = st.session_state.new_code[:4]
@@ -49,43 +53,61 @@ def main() :
     
     # Forecasting
     if st.session_state.code == "IHSG":
-        daily_data = get_stock("^JKSE", "5y", "1d", for_predict=True)
+        daily_data = get_stock("^JKSE", "10y", "1d", for_predict=True)
     elif st.session_state.code == "LQ45":
-        daily_data = get_stock("^JKLQ45", "5y", "1d", for_predict=True)
+        daily_data = get_stock("^JKLQ45", "10y", "1d", for_predict=True)
     else:
-        daily_data = get_stock(st.session_state.code+".JK", "5y", "1d", for_predict=True)
+        daily_data = get_stock(st.session_state.code+".JK", "10y", "1d", for_predict=True)
     
     model = get_model()
     forecast = predict(model, daily_data)
     dates = get_forecast_date()
 
+    # Title
     st.markdown("<h1 style='text-align: center'>Indonesian LQ45 Dashboard</h1>", unsafe_allow_html=True)
+    
+    # Code SelectBox
     option = st.selectbox("Stock Codes",
                           get_codes(), key="new_code",
                           on_change=new_code)
-    code = option[:4]
+    
+    # Selected Company's Name
     name = option[5:]
     
+    # Defining Three Tabs
     dashboard, news, download = st.tabs(["Dashboard", "News", "Download Tabular Data"])
     
+    # First Tab : Dashboard
     with dashboard :
+        
+        #Toggle Button to Activate/Deactivate Auto Update
         realtime = st.toggle("Auto Update", value=True)
         
+        # Placeholder for the Candlestick Chart and the Price Metric
         placeholder = st.empty()
-
-        def update_data(ma_arr, colors, h_lines) :
+        
+        # Function to Update Metric and the Candlestick Chart
+        def update_data(ma_arr: list, colors: list, h_lines: list) :
             
+            # Global variables for further use outside the function
             global stock_data, stock_metric, util, datebreaks, fig
             
+            # Inside the Placeholder
             with placeholder.container():
+                
+                # Two columns : First part for the chart, second part for the tools and filter
                 graph, util = st.columns([0.7, 0.3], gap='small')
             
+                # Inside the Graph
                 with graph :
+                    
+                    # Make 2 columns : first for code name, second for the metric
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.subheader(code)
+                        st.subheader(st.session_state.code)
                         st.write(name)
                     
+                    # Handle the selected code due to code alias
                     if st.session_state.code == "IHSG":
                         stock_data, datebreaks = get_stock("^JKSE",
                                                            st.session_state.period_filter,
@@ -98,18 +120,22 @@ def main() :
                         stock_data, datebreaks = get_stock(st.session_state.code+".JK",
                                                            st.session_state.period_filter,
                                                            st.session_state.interval_filter)
-
+                    
+                    # Get the closed price metric
                     stock_metric = get_metric(stock_data, forecast)
                     
+                    # Show the metric in column 2
                     col2.metric(label="Close Price",
                                 value="Rp {0}".format(stock_metric['Close']),
                                 delta="{0} ({1} %)".format(stock_metric['Diff'],
                                                            stock_metric['Percent']))
-
+                    
+                    # Make the candlestick chart
                     fig = make_graph(stock_data, datebreaks,
                                      st.session_state.interval_filter,
                                      st.session_state.chart_type, ma_arr, colors)
-                                     
+                    
+                    
                     if st.session_state.interval_filter == "m" or st.session_state.interval_filter == "h" :
                         for h in h_lines :
                             fig.add_hline(h, line_color='white',
@@ -232,7 +258,7 @@ def main() :
                           delta="{0} ({1} %)".format(stock_metric['Diff Forecast'][i+5], stock_metric['Percent Forecast'][i+5]))
         
     with news :
-        news_arr = get_news(code)
+        news_arr = get_news(st.session_state.code)
         for news in news_arr :
             container = st.container(border=True)
             with container :
@@ -262,7 +288,7 @@ def timer(placeholder) :
     jkt_tz = pytz.timezone('Asia/Jakarta')
     with placeholder :
         jkt_now = datetime.now(jkt_tz)
-        open_time = datetime(jkt_now.year, jkt_now.month, jkt_now.day, 9, 15, 0)
+        open_time = datetime(jkt_now.year, jkt_now.month, jkt_now.day, 9, 0, 0)
         jkt_now = jkt_now.replace(tzinfo=None)
         diff = open_time - jkt_now
         minutes_diff = divmod(diff.seconds, 60)
@@ -270,9 +296,8 @@ def timer(placeholder) :
         time.sleep(1)
 
 if __name__ == "__main__":
-    if 0<= jkt_minute < 15 and jkt_hour <= 9 :
+    while (8 <= jkt_hour < 9) :
         timer_placeholder = st.empty()
-        while jkt_hour < 10 :
-            timer(timer_placeholder)
+        timer(timer_placeholder)
     else :
         main()
