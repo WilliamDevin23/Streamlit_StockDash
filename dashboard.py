@@ -294,7 +294,7 @@ def timer(placeholder) :
     jkt_tz = pytz.timezone('Asia/Jakarta')
     with placeholder :
         jkt_now = datetime.now(jkt_tz)
-        open_time = datetime(jkt_now.year, jkt_now.month, jkt_now.day, 9, 0, 0)
+        open_time = datetime(jkt_now.year, jkt_now.month, jkt_now.day, 9, 15, 0)
         jkt_now = jkt_now.replace(tzinfo=None)
         diff = open_time - jkt_now
         minutes_diff = divmod(diff.seconds, 60)
@@ -306,5 +306,7 @@ if __name__ == "__main__":
         timer_placeholder = st.empty()
         while (8 <= jkt_hour < 9) :
             timer(timer_placeholder)
+            if jkt_minute > 15 and jkt_hour == 9 :
+                break
     else :
         main()
