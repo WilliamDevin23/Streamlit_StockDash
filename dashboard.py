@@ -302,8 +302,9 @@ def timer(placeholder) :
         time.sleep(1)
 
 if __name__ == "__main__":
-    while (8 <= jkt_hour < 9) :
+    if (8 <= jkt_hour < 9) :
         timer_placeholder = st.empty()
-        timer(timer_placeholder)
+        while (8 <= jkt_hour < 9) :
+            timer(timer_placeholder)
     else :
         main()
