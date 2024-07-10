@@ -302,9 +302,10 @@ def timer(placeholder) :
         time.sleep(1)
 
 if __name__ == "__main__":
-    if (8 <= jkt_hour < 9) :
+    market_close = (8 <= jkt_hour < 9) or (jkt_minute <= 15 and jkt_hour == 9)
+    if market_close :
         timer_placeholder = st.empty()
-        while (8 <= jkt_hour < 9) :
+        while market_close :
             timer(timer_placeholder)
             if jkt_minute > 15 and jkt_hour == 9 :
                 break
