@@ -5,8 +5,6 @@ st.set_page_config(layout='wide')
 from utils import *
 from prediction import *
 import time
-from datetime import datetime, timedelta
-import pytz
 import yfinance as yf
 
 st.markdown("""<style>
@@ -25,15 +23,13 @@ st.markdown("""<style>
             </style>""", unsafe_allow_html=True)
 
 # Get current time based on timezone
-jkt_tz = pytz.timezone('Asia/Jakarta')
-jkt_date = datetime.now(jkt_tz)
-jkt_hour = int(jkt_date.strftime("%H"))
-jkt_minute = int(jkt_date.strftime("%M"))
-jkt_day = jkt_date.strftime("%A")
+date, day, hour, minute = get_today()
 
 
 # Main Application
 def main() :
+    
+    date, day, hour, minute = get_today()
     
     #Session states
     if "chart_type" not in st.session_state : st.session_state.chart_type = "Candlestick"
@@ -41,6 +37,7 @@ def main() :
     if "interval_filter" not in st.session_state : st.session_state.interval_filter = "5m"
     if "code" not in st.session_state : st.session_state.code = "IHSG"
     if "moving_avgs" not in st.session_state : st.session_state.moving_avgs = []
+    if "stochastic" not in st.session_state : st.session_state.stochastic = []
     if "horizontals" not in st.session_state : st.session_state.horizontals = []
     if "color" not in st.session_state : st.session_state.color = []
     if "ma_disable" not in st.session_state : st.session_state.ma_disable = True
@@ -89,7 +86,7 @@ def main() :
         placeholder = st.empty()
         
         # Function to Update Metric and the Candlestick Chart
-        def update_data(ma_arr: list, colors: list, h_lines: list) :
+        def update_data(ma_arr: list, colors: list, h_lines: list, stochastic: list) :
             
             # Global variables for further use outside the function
             global stock_data, stock_metric, util, datebreaks, fig
@@ -135,16 +132,11 @@ def main() :
                     # Make the candlestick chart
                     fig = make_graph(stock_data, datebreaks,
                                      st.session_state.interval_filter,
-                                     st.session_state.chart_type, ma_arr, colors)
+                                     st.session_state.chart_type,
+                                     ma_arr, colors, stochastic)
                     
                     
-                    if st.session_state.interval_filter == "m" or st.session_state.interval_filter == "h" :
-                        for h in h_lines :
-                            fig.add_hline(h, line_color='white',
-                                          annotation_text=h,
-                                          annotation_position='bottom right',
-                                          annotation_font_color='white')
-                    else :
+                    if h_lines is not None :
                         for h in h_lines :
                             fig.add_hline(h, line_color='white',
                                           annotation_text=h,
@@ -159,7 +151,7 @@ def main() :
                                                  name="Predicted Close Prices"))
                     st.plotly_chart(fig, use_container_width=True)
                 
-        update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
+        update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals, st.session_state.stochastic)
         
         with util :
             time_dict = {"5m":"5 Minutes", "1h":"1 Hour",
@@ -221,7 +213,7 @@ def main() :
                             st.session_state.moving_avgs.append(ma)
                             st.session_state.color.append(color)
                             st.session_state.ma_disable = False
-                            update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
+                            update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals, st.session_state.stochastic)
                 
                 with add_line :
                     with st.form(key='horizontal-form', clear_on_submit=True) :
@@ -229,7 +221,7 @@ def main() :
                         if st.form_submit_button("Add", use_container_width=True) :
                             st.session_state.horizontals.append(h)
                             st.session_state.h_disable = False
-                            update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
+                            update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals, st.session_state.stochastic)
                 
                 st.divider()
                 
@@ -237,20 +229,49 @@ def main() :
                     st.session_state.moving_avgs = []
                     st.session_state.color = []
                     st.session_state.ma_disable = True
-                    update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
+                    update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals, st.session_state.stochastic)
                 
                 def clear_horizontals() :
                     st.session_state.horizontals = []
                     st.session_state.h_disable = True
-                    update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
+                    update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals, st.session_state.stochastic)
                 
                 button1, button2 = st.columns(2)
                 with button1 :
-                    st.button("Clear MA", use_container_width=True, disabled = st.session_state.ma_disable, on_click=clear_ma)
+                    st.button("Clear MA", use_container_width=True,
+                              disabled = st.session_state.ma_disable, on_click=clear_ma)
                 
                 with button2 :
-                    st.button("Clear Lines", use_container_width=True, disabled = st.session_state.h_disable, on_click=clear_horizontals)
-        
+                    st.button("Clear Lines", use_container_width=True,
+                              disabled = st.session_state.h_disable, on_click=clear_horizontals)
+            
+            st.divider()
+            
+            with st.popover("Stochastic", use_container_width=True) :
+                with st.form(key='stochastic_form', clear_on_submit=True, border=False) :
+                    period, k_smoothing, d_smoothing = st.columns(3, gap='small')
+                    with period :                    
+                        period = st.number_input(label="Period", format="%d", step=1, value=None, min_value=5)
+                        if period is None or period < 5 :
+                            period = 5
+                    with k_smoothing :                    
+                        k = st.number_input(label="%K", format="%d", step=1, value=None, min_value=3)
+                        if k is None or k < 3 :
+                            k = 3
+                    with d_smoothing :                    
+                        d = st.number_input(label="%D", format="%d", step=1, value=None, min_value=3)
+                        if d is None or d < 3 :
+                            d = 3
+                    if st.form_submit_button("Set", use_container_width=True) :
+                        st.session_state.stochastic = [period, k, d]
+                        update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals, st.session_state.stochastic)
+                
+                def clear_stochastic() :
+                    st.session_state.stochastic = []
+                
+                clear_stoch = st.button("Delete Stochastic", use_container_width=True,
+                                        disabled = len(st.session_state.stochastic) == 0, on_click=clear_stochastic)
+            
         st.markdown("<h3 style='text-align:center; margin: 3px 0px;'>Predictions</h3>", unsafe_allow_html=True)
         
         predictions = st.columns(5)
@@ -281,29 +302,23 @@ def main() :
         
         update_table()
         st.download_button("Download as CSV", data=stock_data.to_csv(index=False),
-                           file_name="{}_{}.csv".format(st.session_state.code, jkt_date), mime="text/csv")
+                           file_name="{}_{}.csv".format(st.session_state.code, date), mime="text/csv")
 
-    while (jkt_hour >= 9 and jkt_hour <= 16) and realtime and not (jkt_day == "Saturday" or jkt_day == "Sunday") :
+    while (hour >= 9 and hour <= 16) and realtime and not (day == "Saturday" or day == "Sunday") :
+        _, day, hour, minute = get_today()
         with dashboard :
-            update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals)
+            update_data(st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals, st.session_state.stochastic)
         with download :
             update_table()
         time.sleep(30)
 
-def timer(placeholder) :
-    jkt_tz = pytz.timezone('Asia/Jakarta')
-    with placeholder :
-        jkt_now = datetime.now(jkt_tz)
-        open_time = datetime(jkt_now.year, jkt_now.month, jkt_now.day, 9, 0, 0)
-        jkt_now = jkt_now.replace(tzinfo=None)
-        diff = open_time - jkt_now
-        minutes_diff = divmod(diff.seconds, 60)
-        st.header("Market will be open in 00:{:02d}:{:02d}".format(minutes_diff[0], minutes_diff[1]))
-        time.sleep(1)
-
 if __name__ == "__main__":
-    while (8 <= jkt_hour < 9) :
+    market_close = (8 <= hour < 9) or (minute <= 15 and hour == 9)
+    if market_close :
         timer_placeholder = st.empty()
-        timer(timer_placeholder)
+        while market_close :
+            _, _, hour, minute = get_today()
+            timer(timer_placeholder)
+            market_close = (8 <= hour < 9) or (minute <= 15 and hour == 9)
     else :
         main()
