@@ -6,6 +6,7 @@ import yfinance as yf
 import streamlit as st
 from datetime import datetime
 import pytz
+import time
 from requests_ratelimiter import LimiterSession
 from data_preprocessing import prepare_data, stochastic
 from prediction import get_forecast_date
