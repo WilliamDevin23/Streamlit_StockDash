@@ -2,8 +2,8 @@ import numpy as np
 
 def ma_for_predict(data) :
     data = data.copy()
+    data["5MA"] = data["Close"].rolling(window=5).mean()
     data["10MA"] = data["Close"].rolling(window=10).mean()
-    data["20MA"] = data["Close"].rolling(window=20).mean()
     return data
     
 def stochastic(data, period=None, k=None, d=None, for_predict=True) :
@@ -45,6 +45,6 @@ def prepare_data(stock_data) :
     stock_data = ma_for_predict(stock_data)
     stock_data = stochastic(stock_data)
     stock_data = clean_data(stock_data)
-    stock_data = stock_data[["Close", "Volume", "10MA", "20MA", "K-Stochastic", "D-Stochastic"]]
+    stock_data = stock_data[["Close", "Volume", "5MA", "10MA", "K-Stochastic", "D-Stochastic"]]
     data_arr = np.array(stock_data.values)
     return data_arr
