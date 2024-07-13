@@ -389,6 +389,7 @@ def main() :
                 st.markdown(f"<h3><a href='{news[3]}' style='text-decoration: none;'>{news[1]}</a></h3>", unsafe_allow_html=True)
                 st.write(news[2])
                 st.markdown(f"""<p style='color: gray;'>{news[4]}</p>""", unsafe_allow_html=True)
+                st.markdown(f"""<p style='color: gray; text-align: right;'>{news[5]}</p>""", unsafe_allow_html=True)
     
     # Download tab. Download the tabular data as CSV based on the period and interval filter.
     with download :
