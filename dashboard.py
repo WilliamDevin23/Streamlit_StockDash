@@ -406,7 +406,7 @@ def main() :
         update_table()
         
         # Download button.
-        st.download_button("Download as CSV", data=stock_data.to_csv(index=False),
+        st.download_button("Download as CSV", data=stock_data.to_csv(),
                            file_name="{}_{}.csv".format(st.session_state.code, date), mime="text/csv")
 
     # If it's not weekend and the hour is within the active market time. Use UTC+7 timezone.
