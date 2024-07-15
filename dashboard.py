@@ -423,11 +423,11 @@ if __name__ == "__main__":
     # Get current time based on timezone
     date, day, hour, minute = get_today()
     
-    market_close = (8 <= hour < 9) or (minute <= 15 and hour == 9)
+    market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" or day != "Sunday")
     if market_close :
         timer_placeholder = st.empty()
     while market_close :
-        _, _, hour, minute = get_today()
+        date, day, hour, minute = get_today()
         timer(timer_placeholder)
-        market_close = (8 <= hour < 9) or (minute <= 15 and hour == 9)
+        market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" or day != "Sunday")
     main()
