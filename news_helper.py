@@ -12,12 +12,14 @@ def get_articles(code) :
     querystring = {"query":code,"language":"id","limit":"10"}
     response = requests.get(url, headers=headers, params=querystring)
     for article in response.json()['data'] :
-        values.append(code)
-        values.append(article["title"])
-        values.append(article["excerpt"])
-        values.append(article["url"])
-        values.append(article["publisher"]['name'])
-        values.append(article["date"])
+        article_record = []
+        article_record.append(code)
+        article_record.append(article["title"])
+        article_record.append(article["excerpt"])
+        article_record.append(article["url"])
+        article_record.append(article["publisher"]['name'])
+        article_record.append(article["date"])
+        values.append(article_record)
     return values
   
 def to_dataframe(values) :
