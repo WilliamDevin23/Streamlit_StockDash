@@ -21,7 +21,7 @@ def get_codes():
     return ["IHSG (Indeks Harga Saham Gabungan)", "LQ45 (Liquid 45)"] + sorted(choice)
 
 def get_news(code) :
-    news_df = conn.query("SELECT * FROM news WHERE code='{}'".format(code))
+    news_df = conn.query("SELECT * FROM news WHERE code='{}'".format(code), ttl=0)
     return news_df.values
 
 def get_stock(ticker, period, interval, for_predict=False):
