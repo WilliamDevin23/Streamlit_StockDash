@@ -18,7 +18,6 @@ def model_forecast(model, data):
     forecast = model.predict(data)
     return forecast
 
-@st.cache_data
 def predict(model, data):
     scaled_data = normalize_data(data, data.max(axis=0), data.min(axis=0))
     pred = model_forecast(model, scaled_data[-101:-1, :])
