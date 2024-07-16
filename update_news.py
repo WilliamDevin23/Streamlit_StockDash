@@ -16,11 +16,11 @@ conn.close()
 
 with concurrent.futures.ThreadPoolExecutor() as executor :
 	futures = []
-    data = []
+	data = []
 	for code in codes :
 		futures.append(executor.submit(get_articles, code=code))
-    for future in concurrent.futures.as_completed(futures) :
-        data.append(future.result())
+	for future in concurrent.futures.as_completed(futures) :
+		data.append(future.result())
 
 df = to_dataframe(data)
 df = change_date_format(df)
