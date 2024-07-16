@@ -18,7 +18,7 @@ def get_articles(code) :
         values.append(article["url"])
         values.append(article["publisher"]['name'])
         values.append(article["date"])
-  return values
+    return values
   
 def to_dataframe(values) :
     df = pd.DataFrame(values, columns=["Code", "Title", "Description", "URL", "Publisher", "Date"])
