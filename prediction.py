@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import pytz
 import numpy as np
 
+@st.cache_resource
 def get_model():
     model = tf.keras.models.load_model("multivariate_10prediction.h5")
     return model
@@ -16,6 +17,7 @@ def model_forecast(model, data):
     forecast = model.predict(data)
     return forecast
 
+@st.cache_data
 def predict(model, data):
     scaled_data = normalize_data(data, data.max(axis=0), data.min(axis=0))
     pred = model_forecast(model, scaled_data[-101:-1, :])
