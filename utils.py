@@ -15,13 +15,13 @@ session = LimiterSession(per_minute=12)
 conn = st.connection("neon", type="sql")
 
 def get_codes():
-    df = conn.query("SELECT * FROM lq45", ttl=0)
+    df = conn.query("SELECT * FROM lq45;", ttl=0)
     df["Long Name"] = df["code"] + " " + "(" + df["name"] + ")"
     choice = list(df["Long Name"].values)
     return ["IHSG (Indeks Harga Saham Gabungan)", "LQ45 (Liquid 45)"] + sorted(choice)
 
 def get_news(code) :
-    news_df = conn.query("SELECT * FROM news WHERE code='{}'".format(code), ttl=0)
+    news_df = conn.query("""SELECT * FROM news WHERE "Code" = '{}';""".format(code), ttl=0)
     return news_df.values
 
 def get_stock(ticker, period, interval, for_predict=False):
