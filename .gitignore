@@ -1,2 +1,4 @@
 __pycache__/ 
 .streamlit/secrets.toml 
+upload_stock_data.py 
+dataset/ 
