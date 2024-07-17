@@ -1,9 +1,9 @@
-name: Update News
+name: Update Price
    
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 17 * * 1'
+    - cron: '0 17 * * *'
 
 jobs:
   build:
@@ -21,10 +21,9 @@ jobs:
           cache-dependency-path: '*requirements.txt'
         
       - name: install packages
-        run: pip install -r news_requirements.txt
+        run: pip install -r price_requirements.txt
         
       - name: execute the script
         env:
           NEON_CONN_STR: ${{ secrets.NEON_CONN_STR }}
-          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
-        run: python update_news.py
+        run: python update_price.py
