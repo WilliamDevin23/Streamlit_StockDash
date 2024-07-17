@@ -15,7 +15,7 @@ session = LimiterSession(per_minute=12)
 conn = st.connection("neon", type="sql")
 
 def get_codes():
-    df = conn.query("SELECT * FROM lq45;", ttl=0)
+    df = conn.query("SELECT * FROM lq45_codes;", ttl=0)
     df["Long Name"] = df["code"] + " " + "(" + df["name"] + ")"
     choice = list(df["Long Name"].values)
     return ["IHSG (Indeks Harga Saham Gabungan)", "LQ45 (Liquid 45)"] + sorted(choice)
