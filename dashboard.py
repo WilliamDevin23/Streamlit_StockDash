@@ -423,6 +423,5 @@ if __name__ == "__main__":
         date, day, hour, minute = get_today()
         timer(st.session_state.timer_placeholder)
         market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" or day != "Sunday")
-    
-    st.session_state.timer_placeholder.empty()
+        st.session_state.timer_placeholder.empty()
     main()
