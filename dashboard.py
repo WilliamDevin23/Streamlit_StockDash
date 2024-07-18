@@ -50,15 +50,11 @@ def main() :
             st.session_state.horizontals = []
     
     # Get the daily data spans for 10 years.
-    if st.session_state.code == "IHSG":
-        daily_data = get_stock("^JKSE", "10y", "1d", for_predict=True)
-    elif st.session_state.code == "LQ45":
-        daily_data = get_stock("^JKLQ45", "10y", "1d", for_predict=True)
-    else:
-        daily_data = get_stock(st.session_state.code+".JK", "10y", "1d", for_predict=True)
+    daily_data, _ = get_stock(ticker=st.session_state.code.lower())
     
     # Forecast the next 10 days prices.
     model = get_model()
+    daily_data = prepare_data(daily_data)
     forecast = predict(model, daily_data)
     dates = get_forecast_date()
     
@@ -77,19 +73,9 @@ def main() :
                 st.markdown(f"<h3>{st.session_state.code}</h3>", unsafe_allow_html=True)
                 st.write(name)
             
-            # Handle the selected code due to code alias
-            if st.session_state.code == "IHSG":
-                stock_data, datebreaks = get_stock("^JKSE",
-                                                   st.session_state.period_filter,
-                                                   st.session_state.interval_filter)
-            elif st.session_state.code == "LQ45":
-                stock_data, datebreaks = get_stock("^JKLQ45",
-                                                   st.session_state.period_filter,
-                                                   st.session_state.interval_filter)
-            else :
-                stock_data, datebreaks = get_stock(st.session_state.code+".JK",
-                                                   st.session_state.period_filter,
-                                                   st.session_state.interval_filter)
+            stock_data, datebreaks = get_stock(ticker=st.session_state.code.lower(),
+                                               period=st.session_state.period_filter,
+                                               interval=st.session_state.interval_filter)
                 
             # Get the closed price metric
             stock_metric = get_metric(stock_data, forecast)
@@ -255,7 +241,7 @@ def main() :
         elif st.session_state.period_filter == "1mo" :
             intervals = intervals[2:-1]
         else :
-            intervals = intervals[-3:]
+            intervals = intervals[2:]
             
         # Interval selectbox.
         st.selectbox("Interval", intervals, format_func=format_func,

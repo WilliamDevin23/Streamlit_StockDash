@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 def ma_for_predict(data) :
     data = data.copy()
@@ -48,3 +49,29 @@ def prepare_data(stock_data) :
     stock_data = stock_data[["Close", "Volume", "5MA", "10MA", "K-Stochastic", "D-Stochastic"]]
     data_arr = np.array(stock_data.values)
     return data_arr
+    
+def resample(data, period, interval) :
+
+    # Cut the data
+    last_day = data.index[-1]
+    if period[1:] == "mo" :
+        first_day = last_day - pd.DateOffset(days=30)
+        monday_before = first_day - pd.DateOffset(days=first_day.weekday())
+        data = data.loc[monday_before:]
+    elif period[1:] == "y" :
+        n_period = int(period.replace("y", ""))
+        first_day = last_day - pd.DateOffset(days=n_period*365)
+        first_day = first_day.replace(day=1)
+        data = data.loc[first_day:]
+    
+    # Resample :
+    if interval[1:] == "wk" :
+        data = data.resample("W-FRI").agg({"Open":"first", "High":"max",
+                                           "Low":"min", "Close":"last",
+                                           "Volume":"sum"})
+    elif interval[1:] == "mo" :
+        data = data.resample("M").agg({"Open":"first", "High":"max",
+                                       "Low":"min", "Close":"last",
+                                       "Volume":"sum"})
+    
+    return data
