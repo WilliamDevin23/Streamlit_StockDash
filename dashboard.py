@@ -41,7 +41,6 @@ def main() :
     if "ma_disable" not in st.session_state : st.session_state.ma_disable = True
     if "h_disable" not in st.session_state : st.session_state.h_disable = True
     if "realtime" not in st.session_state : st.session_state.realtime = True
-    if "timer_placeholder" not in st.session_state : st.session_state.timer_placeholder = st.empty()
     
     # Function to handle code choice
     def new_code():
@@ -416,6 +415,7 @@ if __name__ == "__main__":
 
     # Get current time based on timezone
     date, day, hour, minute = get_today()
+    if "timer_placeholder" not in st.session_state : st.session_state.timer_placeholder = st.empty()
     
     market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" or day != "Sunday")
     while market_close :
