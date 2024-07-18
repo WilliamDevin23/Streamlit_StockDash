@@ -50,28 +50,16 @@ def prepare_data(stock_data) :
     data_arr = np.array(stock_data.values)
     return data_arr
     
-def resample(data, period, interval) :
-
-    # Cut the data
-    last_day = data.index[-1]
-    if period[1:] == "mo" :
-        first_day = last_day - pd.DateOffset(days=30)
-        monday_before = first_day - pd.DateOffset(days=first_day.weekday())
-        data = data.loc[monday_before:]
-    elif period[1:] == "y" :
-        n_period = int(period.replace("y", ""))
-        first_day = last_day - pd.DateOffset(days=n_period*365)
-        first_day = first_day.replace(day=1)
-        data = data.loc[first_day:]
-    
-    # Resample :
+def resample(data, interval) :
+    data.index = pd.to_datetime(data.index, format="%Y-%m-%d")
     if interval[1:] == "wk" :
         data = data.resample("W-FRI").agg({"Open":"first", "High":"max",
                                            "Low":"min", "Close":"last",
                                            "Volume":"sum"})
+        data.index = data.index.strftime("%Y-%m-%d")
     elif interval[1:] == "mo" :
-        data = data.resample("M").agg({"Open":"first", "High":"max",
-                                       "Low":"min", "Close":"last",
-                                       "Volume":"sum"})
-    
+        data = data.resample("ME").agg({"Open":"first", "High":"max",
+                                        "Low":"min", "Close":"last",
+                                        "Volume":"sum"})
+        data.index = data.index.strftime("%Y-%m")
     return data

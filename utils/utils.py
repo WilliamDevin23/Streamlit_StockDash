@@ -3,7 +3,6 @@ from plotly.subplots import make_subplots
 import numpy as np
 import streamlit as st
 from datetime import datetime
-import pytz
 import time
 from inference.data_preprocessing import stochastic
 
@@ -112,14 +111,6 @@ def getcolor():
     color=['aliceblue', 'blue', 'cyan', 'gray', 'gold', 'hotpink', 'lavender', 'lightgreen', 'magenta', 'orange']
 
     return color
-
-def get_today() :
-    jkt_tz = pytz.timezone('Asia/Jakarta')
-    jkt_date = datetime.now(jkt_tz)
-    jkt_hour = int(jkt_date.strftime("%H"))
-    jkt_minute = int(jkt_date.strftime("%M"))
-    jkt_day = jkt_date.strftime("%A")
-    return jkt_date, jkt_day, jkt_hour, jkt_minute
 
 def timer(placeholder) :
     jkt_tz = pytz.timezone('Asia/Jakarta')
