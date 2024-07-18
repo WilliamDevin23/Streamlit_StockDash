@@ -49,6 +49,7 @@ def get_stock(ticker=None, period="10y", interval="1d"):
         today_data = stock_tick.history(period="1d", interval="1d", prepost=True)
         today_data.index = today_data.index.strftime("%Y-%m-%d")
         stock_data = pd.concat([stock_data, today_data], axis=0)
+        stock_data.index = pd.to_datetime(stock_data.index)
         
         if interval[1:] == "d":
             dt_all = pd.date_range(start=stock_data.index.tolist()[0],
