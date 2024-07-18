@@ -3,8 +3,9 @@ import streamlit as st
 # Streamlit Wide Layout
 st.set_page_config(layout='wide')
 
-from utils import *
-from prediction import *
+from utils.utils import *
+from data_collecting.data_collecting import *
+from inference.prediction import *
 import time
 import yfinance as yf
 

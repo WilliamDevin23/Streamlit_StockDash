@@ -18,13 +18,13 @@ jobs:
         with:
           python-version: '3.11.0'
           cache: 'pip'
-          cache-dependency-path: '*requirements.txt'
+          cache-dependency-path: 'update_actions/*requirements.txt'
         
       - name: install packages
-        run: pip install -r news_requirements.txt
+        run: pip install -r update_actions/news_requirements.txt
         
       - name: execute the script
         env:
           NEON_CONN_STR: ${{ secrets.NEON_CONN_STR }}
           RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
-        run: python update_news.py
+        run: python update_actions/update_news.py

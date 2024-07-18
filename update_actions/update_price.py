@@ -4,13 +4,13 @@ import psycopg2
 import numpy as np
 import os
 
-lq45 = pd.read_csv("LQ45_CODEName.csv")
-codes = lq45["Code"].values.tolist() + ["ihsg", "lq45"]
-codes = [c.lower() for c in codes]
-
 conn_str = os.getenv('NEON_CONN_STR')
 conn = psycopg2.connect(conn_str)
 cur = conn.cursor()
+
+cur.execute("SELECT code FROM lq45_codes;")
+codes = cur.fetchall()
+codes = [c[0].lower() for c in codes] + ["ihsg", "lq45"]
 
 def update_price(cursor, code) :
     if code == "ihsg":

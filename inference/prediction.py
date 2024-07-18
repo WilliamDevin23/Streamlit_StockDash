@@ -2,14 +2,16 @@ import numpy as np
 import tensorflow as tf
 import streamlit as st
 import pandas as pd
-from data_preprocessing import *
+from inference.data_preprocessing import *
 from datetime import datetime, timedelta
 import pytz
 import numpy as np
+import os
 
 @st.cache_resource
 def get_model():
-    model = tf.keras.models.load_model("multivariate_10prediction.h5")
+    model_path = os.path.join("model", "multivariate_10prediction.h5")
+    model = tf.keras.models.load_model(model_path)
     return model
 
 def model_forecast(model, data):

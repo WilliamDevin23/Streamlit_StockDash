@@ -4,7 +4,7 @@ import numpy as np
 from sqlalchemy import create_engine
 import os
 import psycopg2
-from news_helper import *
+from .news_helper import *
 
 conn_str = os.getenv('NEON_CONN_STR')
 conn = psycopg2.connect(conn_str)
