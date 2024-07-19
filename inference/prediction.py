@@ -14,15 +14,17 @@ def get_model():
     model = tf.keras.models.load_model(model_path)
     return model
 
-def model_forecast(model, data):
+@st.cache_data
+def model_forecast(_model, data):
     data = np.expand_dims(data, axis=0)
     data = tf.convert_to_tensor(data)
-    forecast = model.predict(data)
+    forecast = _model.predict(data)
     return forecast
 
-def predict(model, data):
+@st.cache_data
+def predict(_model, data):
     scaled_data = normalize_data(data, data.max(axis=0), data.min(axis=0))
-    pred = model_forecast(model, scaled_data[-101:-1, :])
+    pred = model_forecast(_model, scaled_data[-101:-1, :])
     pred = np.reshape(pred, (-1,))
     stock_pred = reverse_transform(pred, data[:, 0].max(), data[:, 0].min())
     return stock_pred

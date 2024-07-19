@@ -7,6 +7,7 @@ from datetime import datetime
 import time
 from inference.data_preprocessing import stochastic
 
+@st.cache_data
 def get_metric(data, forecast):
     stat = {}
     open_price = data["Open"].values[0]
@@ -58,6 +59,7 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr, colors, stochasti
     volume_color = np.where(new_data["Close"] >= new_data["Open"], "green", "red")
     volume_color[0] = "green" if new_data["Open"].values[0] <= new_data["Close"].values[0] else "red"
     new_data = add_ma(new_data, ma_arr)
+    
     if len(stochastic_param) > 0 :
         period=stochastic_param[0]
         k=stochastic_param[1]
@@ -69,9 +71,9 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr, colors, stochasti
                             subplot_titles=('', f'Stochastic ({period}, {k}, {d})'), row_width=[0.3, 0.8])
         
         fig.add_trace(go.Scatter(x=new_data.index, y=new_data["K-Stochastic"], name="%K", 
-                                 marker={'color':'yellow', 'size':size}, mode='lines', showlegend=True), row=2, col=1)
+                                 marker={'color':colors["stoch_color"][0], 'size':size}, mode='lines', showlegend=True), row=2, col=1)
         fig.add_trace(go.Scatter(x=new_data.index, y=new_data["D-Stochastic"], name="%D", 
-                                 marker={'color':'blue', 'size':size}, mode='lines', showlegend=True), row=2, col=1)
+                                 marker={'color':colors["stoch_color"][1], 'size':size}, mode='lines', showlegend=True), row=2, col=1)
     
     else :
         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.05, subplot_titles=('', 'Volume'), row_width=[0.3, 0.8])
@@ -96,11 +98,12 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr, colors, stochasti
     fig.update_xaxes(rangebreaks=[{"values":datebreaks, "dvalue": dval*60*1000}])
     
     if len(ma_arr) > 0 and len(colors) > 0 :
-        for ma, color in zip(ma_arr, colors) :
+        for ma, color in zip(ma_arr, colors["ma_color"]) :
             fig.add_trace(go.Scatter(x=new_data.index, y=new_data["MA "+str(ma)], name="MA "+str(ma), 
                                      marker={'color':color, 'size':size}, hoverinfo='skip'))
     return fig
 
+@st.cache_data
 def add_ma(data, window_size) :
     if window_size is not None :
         for w in window_size :

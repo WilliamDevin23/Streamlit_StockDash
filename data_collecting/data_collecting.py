@@ -17,6 +17,7 @@ def get_conn():
     
 conn = get_conn()
 
+@st.cache_data
 def get_codes():
     df = conn.query("SELECT * FROM lq45_codes;", ttl=0)
     df["Long Name"] = df["code"] + " " + "(" + df["name"] + ")"
@@ -27,6 +28,7 @@ def get_news(code) :
     news_df = conn.query("""SELECT * FROM news WHERE "Code" = '{}';""".format(code), ttl=0)
     return news_df.values
 
+@st.cache_data
 def get_stock(ticker=None, period="10y", interval="1d"):
     
     if ticker == "ihsg" :
@@ -85,6 +87,7 @@ def get_stock(ticker=None, period="10y", interval="1d"):
     dt_breaks = [d for d in dt_all_str if not d in stock_data.index.tolist() and not d in predicted_days]
     return stock_data, dt_breaks
 
+@st.cache_data
 def get_first_date(code, period, interval) :
     amount, period = re.findall(r'\d+|\D+', period)
     amount = int(amount)
@@ -119,12 +122,14 @@ def get_today() :
     
     return jkt_date, jkt_day, jkt_hour, jkt_minute
 
+@st.cache_data
 def get_maximum_date(code) :
     max_date = conn.query("""SELECT MAX("Date") FROM {};""".format(code))["max"].values.tolist()[0]
-    #max_date = max_date.strftime("%Y-%m-%d")
-    #max_date = datetime.strptime(max_date, "%Y-%m-%d")
+    max_date = max_date.strftime("%Y-%m-%d")
+    max_date = datetime.strptime(max_date, "%Y-%m-%d")
     return max_date
 
+@st.cache_data
 def is_updated(code) :
     today_date, _, _, _ = get_today()
     updated_date = get_maximum_date(code)

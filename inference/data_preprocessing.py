@@ -1,12 +1,15 @@
 import numpy as np
 import pandas as pd
+import streamlit as st
 
+@st.cache_data
 def ma_for_predict(data) :
     data = data.copy()
     data["5MA"] = data["Close"].rolling(window=5).mean()
     data["10MA"] = data["Close"].rolling(window=10).mean()
     return data
-    
+
+@st.cache_data
 def stochastic(data, period=None, k=None, d=None, for_predict=True) :
     stock_history = data.copy()
     if for_predict :
@@ -23,24 +26,28 @@ def stochastic(data, period=None, k=None, d=None, for_predict=True) :
         stock_history.drop(columns=["FastK-Stochastic"], axis=1, inplace=True)
     return stock_history
 
+@st.cache_data
 def clean_data(data) :
     data = data.copy()
     data.dropna(inplace=True)
     data = data.loc[(data != 0).all(axis=1)]
     return data
-    
+
+@st.cache_data
 def normalize_data(data, max, min) :
     new_data = data.copy()
     new_data -= min
     new_data /= (max - min)
     return new_data
-    
+
+@st.cache_data
 def reverse_transform(data, max, min) :
     new_data = data.copy()
     new_data *= (max - min)
     new_data += min
     return new_data
 
+@st.cache_data
 def prepare_data(stock_data) :
     stock_data = stock_data[["Close", "High", "Low", "Volume"]]
     stock_data = ma_for_predict(stock_data)
@@ -50,6 +57,7 @@ def prepare_data(stock_data) :
     data_arr = np.array(stock_data.values)
     return data_arr
     
+@st.cache_data
 def resample(data, interval) :
     data.index = pd.to_datetime(data.index, format="%Y-%m-%d")
     if interval[1:] == "wk" :
