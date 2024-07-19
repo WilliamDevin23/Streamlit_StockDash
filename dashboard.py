@@ -11,9 +11,6 @@ import yfinance as yf
 
 # Plotly ModeBar Buttons, Streamlit Metric and Heading Positioning
 st.markdown("""<style>
-                div.modebar {
-                    left:40%;
-                }
                 button[title='View fullscreen'] {
                     position: absolute; left: -5%;
                 }
@@ -38,7 +35,7 @@ def main() :
     if "moving_avgs" not in st.session_state : st.session_state.moving_avgs = []
     if "stochastic" not in st.session_state : st.session_state.stochastic = []
     if "horizontals" not in st.session_state : st.session_state.horizontals = []
-    if "color" not in st.session_state : st.session_state.color = []
+    if "ma_color" not in st.session_state : st.session_state.ma_color = []
     if "ma_disable" not in st.session_state : st.session_state.ma_disable = True
     if "h_disable" not in st.session_state : st.session_state.h_disable = True
     if "realtime" not in st.session_state : st.session_state.realtime = True
@@ -106,9 +103,6 @@ def main() :
             # Handle candlestick hoverinfo background color.
             fig.update_traces(hoverlabel=dict(bgcolor=hover_bg_color), selector=dict(type="candlestick"))
             
-            # Disable hoverinfo for Moving Average line(s).
-            fig.update_traces(hoverinfo="none", selector=dict(type="scatter"))
-            
             # If interval is daily, then plot the forecasted prices.
             if st.session_state.interval_filter == "1d" :
                 fig.add_trace(go.Scatter(x=dates, y=forecast, mode='lines',
@@ -142,7 +136,7 @@ def main() :
         placeholder = st.empty()
         
         # Run update_data() for the first time.
-        update_data(placeholder, st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals, st.session_state.stochastic)
+        update_data(placeholder, st.session_state.moving_avgs, st.session_state.ma_color, st.session_state.horizontals, st.session_state.stochastic)
         
         # Predictions Section.
         st.markdown("<h3 style='text-align:center; margin: 3px 0px;'>Predictions</h3>", unsafe_allow_html=True)
@@ -250,94 +244,80 @@ def main() :
         # Streamlit's Horizontal line as a divider.
         st.divider()
         
-        # Get color list.
-        color_arr = getcolor()
-        
         # Popover that includes the Moving Average and Horizontal Line forms.
-        with st.popover("Moving Average and Horizontal Lines", use_container_width=True) :
-            
-            # Make 2 columns. One for Moving Average form and another for Horizontal Line form.
-            add_ma, add_line = st.columns(2, gap='small')
-            
-            # First column.
-            with add_ma :
+        with st.popover("Moving Average", use_container_width=True) :
                 
-                # The Moving Average form.
-                with st.form(key='add-ma-form', clear_on_submit=True) :
+            # The Moving Average form.
+            with st.form(key='add-ma-form', clear_on_submit=True) :
+                
+                ma_col, ma_color_col = st.columns(2)
+                
+                with ma_col :
                     # Number input for Moving Average period.
                     ma = st.number_input(label="Add MA", format="%d", step=1, value=None, min_value=3)
-                    
                     # Handle invalid inputs.
                     if ma is None or ma < 3 :
                         ma = 3
+                
+                with ma_color_col :
+                    ma_color = st.color_picker(label="Select Color", value="#b5f5c8")
+                
+                # If the form is submitted.
+                if st.form_submit_button("Add", disabled=len(st.session_state.moving_avgs) >= 2, use_container_width=True) :
                     
-                    # If the form is submitted.
-                    if st.form_submit_button("Add", disabled=len(st.session_state.color) >= 2, use_container_width=True) :
-                        # Sampling color randomly without replacement.
-                        color = np.random.choice(color_arr, replace=False)
-                        
-                        # Append the inputted MA period to the moving averages session states.
-                        st.session_state.moving_avgs.append(ma)
-                        
-                        # Append the randomly selected color to the color session states.
-                        st.session_state.color.append(color)
-                        
-                        # Set the "Clear MA" disabled to False.
-                        st.session_state.ma_disable = False
-                        
-                        # Replotting the chart with the moving average.
-                        update_data(placeholder, st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals, st.session_state.stochastic)
-            
-            # Add Horizontal Line form.
-            with add_line :
-                # Horizontal Line form.
-                with st.form(key='horizontal-form', clear_on_submit=True) :
-                    # Number input for Horizontal Line y-axis value.
-                    h = st.number_input(label="Add HLine", format="%d", step=10, value=None)
+                    # Append the inputted MA period to the moving averages session states.
+                    st.session_state.moving_avgs.append(ma)
                     
-                    # If the form is submitted.
-                    if st.form_submit_button("Add", use_container_width=True) :
-                        # Append the inputted horizontal line y-axis value to the horizontals session states.
-                        st.session_state.horizontals.append(h)
-                        
-                        # Set the "Clear Lines" disabled to False.
-                        st.session_state.h_disable = False
-                        
-                        # Replotting the chart with the horizontal line.
-                        update_data(placeholder, st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals, st.session_state.stochastic)
-            
-            # Streamlit's Horizontal line as a divider.
-            st.divider()
-            
+                    # Append the randomly selected color to the color session states.
+                    st.session_state.ma_color.append(ma_color)
+                    
+                    # Set the "Clear MA" disabled to False.
+                    st.session_state.ma_disable = False
+                    
+                    # Replotting the chart with the moving average.
+                    update_data(placeholder, st.session_state.moving_avgs, st.session_state.ma_color, st.session_state.horizontals, st.session_state.stochastic)
+        
             # Clear Moving Average(s). Triggered when the Clear MA button is clicked.
             def clear_ma() :
                 st.session_state.moving_avgs = []
                 st.session_state.color = []
                 st.session_state.ma_disable = True
-                update_data(placeholder, st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals, st.session_state.stochastic)
+                update_data(placeholder, st.session_state.moving_avgs, st.session_state.ma_color, st.session_state.horizontals, st.session_state.stochastic)
+            
+            # Clear MA button.
+            st.button("Clear MA", use_container_width=True,
+                      disabled = st.session_state.ma_disable, on_click=clear_ma)
+        
+        with st.popover("Horizontal Lines", use_container_width=True) :
+            
+            # Horizontal Line form.
+            with st.form(key='horizontal-form', clear_on_submit=True) :
+                # Number input for Horizontal Line y-axis value.
+                h = st.number_input(label="Add HLine", format="%d", step=10, value=None)
+                
+                # If the form is submitted.
+                if st.form_submit_button("Add", use_container_width=True) :
+                    # Append the inputted horizontal line y-axis value to the horizontals session states.
+                    st.session_state.horizontals.append(h)
+                    
+                    # Set the "Clear Lines" disabled to False.
+                    st.session_state.h_disable = False
+                    
+                    # Replotting the chart with the horizontal line.
+                    update_data(placeholder, st.session_state.moving_avgs, st.session_state.ma_color, st.session_state.horizontals, st.session_state.stochastic)
+            
+            # Streamlit's Horizontal line as a divider.
+            st.divider()
             
             # Clear Horizontal Line(s). Triggered when the Clear Lines button is clicked.
             def clear_horizontals() :
                 st.session_state.horizontals = []
                 st.session_state.h_disable = True
-                update_data(placeholder, st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals, st.session_state.stochastic)
-            
-            # Make two columns.
-            button1, button2 = st.columns(2)
-            
-            # First column.
-            with button1 :
-                # Clear MA button.
-                st.button("Clear MA", use_container_width=True,
-                          disabled = st.session_state.ma_disable, on_click=clear_ma)
+                update_data(placeholder, st.session_state.moving_avgs, st.session_state.ma_color, st.session_state.horizontals, st.session_state.stochastic)
             
             # Clear Lines button.
-            with button2 :
-                st.button("Clear Lines", use_container_width=True,
-                          disabled = st.session_state.h_disable, on_click=clear_horizontals)
-        
-        # Streamlit's Horizontal line as a divider.
-        st.divider()
+            st.button("Clear Lines", use_container_width=True,
+                      disabled = st.session_state.h_disable, on_click=clear_horizontals)
         
         # Popover that includes the Stochastic form.
         with st.popover("Stochastic", use_container_width=True) :
@@ -379,7 +359,7 @@ def main() :
                     st.session_state.stochastic = [period, k, d]
                     
                     # Replotting the chart with the Stochastic Oscillator.
-                    update_data(placeholder, st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals, st.session_state.stochastic)
+                    update_data(placeholder, st.session_state.moving_avgs, st.session_state.ma_color, st.session_state.horizontals, st.session_state.stochastic)
             
             # Delete Stochastic plot. Triggered when the Delete button is clicked.
             def clear_stochastic() :
@@ -393,7 +373,7 @@ def main() :
     while (hour >= 9 and hour <= 16) and realtime and not (day == "Saturday" or day == "Sunday") :
         _, day, hour, minute = get_today()
         with dashboard :
-            update_data(placeholder, st.session_state.moving_avgs, st.session_state.color, st.session_state.horizontals, st.session_state.stochastic)
+            update_data(placeholder, st.session_state.moving_avgs, st.session_state.ma_color, st.session_state.horizontals, st.session_state.stochastic)
         with download :
             update_table()
         time.sleep(30)

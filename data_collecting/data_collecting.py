@@ -57,18 +57,19 @@ def get_stock(ticker=None, period="10y", interval="1d"):
         updated_status = is_updated(ticker)
         first_date = get_first_date(ticker, period, interval)
         stock_data = conn.query("""SELECT * FROM {} WHERE "Date" >= '{}';""".format(ticker[:4], first_date))
-        stock_data.set_index("Date", inplace=True)
         
         if not updated_status :
             today_data = stock_tick.history(period="1d", interval="1d", prepost=True)
-            today_data.index = today_data.index.strftime("%Y-%m-%d")
+            today_data.reset_index(inplace=True)
             stock_data = pd.concat([stock_data, today_data], axis=0)
+        
+        stock_data["Date"] = stock_data["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
+        stock_data.set_index("Date", inplace=True)
         
         if interval[1:] == "d":
             dt_all = pd.date_range(start=stock_data.index.tolist()[0],
                                    end=predicted_days[-1], freq="D")
             dt_all_str = [d.strftime("%Y-%m-%d") for d in dt_all.tolist()]
-        
         else :
             stock_data = resample(stock_data, interval)
             if interval[1:] == "wk":
@@ -82,7 +83,6 @@ def get_stock(ticker=None, period="10y", interval="1d"):
                 dt_all_str = [d.strftime("%Y-%m") for d in dt_all.tolist()]
         
     dt_breaks = [d for d in dt_all_str if not d in stock_data.index.tolist() and not d in predicted_days]
-    stock_data = stock_data.loc[stock_data["Close"] != 0]
     return stock_data, dt_breaks
 
 def get_first_date(code, period, interval) :
@@ -90,7 +90,6 @@ def get_first_date(code, period, interval) :
     amount = int(amount)
     
     last_date = get_maximum_date(code)
-    last_date = datetime.strptime(last_date, "%Y-%m-%d")
     
     if period == "mo" :
         first_date = last_date - pd.DateOffset(days=amount*30)
@@ -114,11 +113,16 @@ def get_today() :
     jkt_hour = int(jkt_date.strftime("%H"))
     jkt_minute = int(jkt_date.strftime("%M"))
     jkt_day = jkt_date.strftime("%A")
+    
     jkt_date = jkt_date.strftime("%Y-%m-%d")
+    jkt_date = datetime.strptime(jkt_date, "%Y-%m-%d")
+    
     return jkt_date, jkt_day, jkt_hour, jkt_minute
 
 def get_maximum_date(code) :
     max_date = conn.query("""SELECT MAX("Date") FROM {};""".format(code))["max"].values.tolist()[0]
+    #max_date = max_date.strftime("%Y-%m-%d")
+    #max_date = datetime.strptime(max_date, "%Y-%m-%d")
     return max_date
 
 def is_updated(code) :
