@@ -98,7 +98,7 @@ def main() :
                                   annotation_font_color='white', row=1, col=1)
                 
             # List that stores hoverinfo background colors corresponding to each data.
-            hover_bg_color = ["green" if close > open else "red" for open, close in zip(stock_data["Open"].values, stock_data["Close"].values)]
+            hover_bg_color = ["green" if close >= open_ else "red" for open_, close in zip(stock_data["Open"].values, stock_data["Close"].values)]
                 
             # Handle candlestick hoverinfo background color.
             fig.update_traces(hoverlabel=dict(bgcolor=hover_bg_color), selector=dict(type="candlestick"))
@@ -134,6 +134,15 @@ def main() :
         
         # Placeholder for the Candlestick Chart and the Price Metric
         placeholder = st.empty()
+        
+        # Timer Section (for minutes and hour timeframe only)
+        date, day, hour, minute = get_today()
+        market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" or day != "Sunday")
+        lower_than_daily = st.session_state.interval_filter == "5m" or st.session_state.interval_filter == "1h"
+        while market_close and lower_than_daily :
+            date, day, hour, minute = get_today()
+            timer(placeholder)
+            market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" or day != "Sunday")
         
         # Run update_data() for the first time.
         update_data(placeholder, st.session_state.moving_avgs, st.session_state.ma_color, st.session_state.horizontals, st.session_state.stochastic)
@@ -379,15 +388,4 @@ def main() :
         time.sleep(30)
 
 if __name__ == "__main__":
-
-    # Get current time based on timezone
-    date, day, hour, minute = get_today()
-    if "timer_placeholder" not in st.session_state : st.session_state.timer_placeholder = st.empty()
-    
-    market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" or day != "Sunday")
-    while market_close :
-        date, day, hour, minute = get_today()
-        timer(st.session_state.timer_placeholder)
-        market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" or day != "Sunday")
-        st.session_state.timer_placeholder.empty()
     main()
