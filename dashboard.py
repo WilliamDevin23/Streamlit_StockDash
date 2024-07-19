@@ -107,7 +107,7 @@ def main() :
             if st.session_state.interval_filter == "1d" :
                 fig.add_trace(go.Scatter(x=dates, y=forecast, mode='lines',
                                          line=dict(color=line_coloring(forecast), width=2),
-                                         name="Predicted Close Prices"))
+                                         name="Predicted"))
                 
             # Display the plot.
             st.plotly_chart(fig, use_container_width=True)

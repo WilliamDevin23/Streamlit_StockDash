@@ -87,7 +87,7 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr, colors, stochasti
     else :
         data_arr = new_data["Open"].tolist()[:1] + new_data["Close"].tolist()[1:]
         color = line_coloring(data_arr)
-        fig.add_trace(go.Scatter(x=new_data.index, y=data_arr, line=dict(color=color, width=3)), row=1, col=1)
+        fig.add_trace(go.Scatter(x=new_data.index, y=data_arr, line=dict(color=color, width=3), showlegend=False, name="Price"), row=1, col=1)
     
     fig.update_layout(margin={"b":8, "t":8, "l":8, "r":8},
                       autosize=True, template='plotly_dark',
