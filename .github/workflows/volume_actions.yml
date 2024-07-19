@@ -1,9 +1,9 @@
-name: Update News
+name: Update Composite Volume
    
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 17 * * 1'
+    - cron: '0 3 * * 2-6'
 
 jobs:
   build:
@@ -26,5 +26,4 @@ jobs:
       - name: execute the script
         env:
           NEON_CONN_STR: ${{ secrets.NEON_CONN_STR }}
-          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
-        run: python update_actions/update_news.py
+        run: python update_actions/update_volume.py
