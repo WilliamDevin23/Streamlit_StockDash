@@ -193,7 +193,7 @@ def main() :
         with st.popover("Moving Average", use_container_width=True) :
                 
             # The Moving Average form.
-            with st.form(key='add-ma-form', clear_on_submit=True) :
+            with st.form(key='add-ma-form', clear_on_submit=True, border=False) :
                 
                 ma_col, ma_color_col = st.columns(2)
                 
@@ -233,7 +233,7 @@ def main() :
         with st.popover("Horizontal Lines", use_container_width=True) :
             
             # Horizontal Line form.
-            with st.form(key='horizontal-form', clear_on_submit=True) :
+            with st.form(key='horizontal-form', clear_on_submit=True, border=False) :
                 
                 h_col, h_color_col = st.columns(2)
                 
@@ -254,9 +254,6 @@ def main() :
                     
                     # Set the "Clear Lines" disabled to False.
                     st.session_state.h_disable = False
-            
-            # Streamlit's Horizontal line as a divider.
-            st.divider()
             
             # Clear Horizontal Line(s). Triggered when the Clear Lines button is clicked.
             def clear_horizontals() :
