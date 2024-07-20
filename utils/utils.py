@@ -79,7 +79,7 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr, colors, stochasti
                       xaxis_rangeslider_visible=False,
                       modebar_add = ['drawline', 'drawrect', 'eraseshape'],
                       modebar_remove = ['lasso2d', 'select2d', 'zoomIn2d', 'zoomOut2d'],
-                      legend=dict(yanchor='top', xanchor='left', x=0.99, y=0.88))
+                      legend=dict(yanchor='top', xanchor='left', x=0.08, y=0.98))
     fig.update_xaxes(rangebreaks=[{"values":datebreaks, "dvalue": dval*60*1000}])
     
     if len(ma_arr) > 0 and len(colors) > 0 :
