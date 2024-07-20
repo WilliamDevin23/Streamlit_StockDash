@@ -8,28 +8,13 @@ import time
 from inference.data_preprocessing import stochastic
 
 @st.cache_data
-def get_metric(data, forecast):
+def get_metric(data):
     stat = {}
     open_price = data["Open"].values[0]
     close_price = round(data["Close"].values[-1], 2)
 
     diff = round(close_price - open_price, 2)
     diff_percentage = round(diff*100/open_price, 2)
-    
-    for f in forecast :
-        diff_forecast = round(f - open_price)
-        diff_percentage_forecast = round(diff_forecast*100/open_price, 2)
-        if "Diff Forecast" not in stat :
-            stat["Diff Forecast"] = []
-            stat["Diff Forecast"].append(diff_forecast)
-        else :
-            stat["Diff Forecast"].append(diff_forecast)
-        
-        if "Percent Forecast" not in stat :
-            stat["Percent Forecast"] = []
-            stat["Percent Forecast"].append(diff_percentage_forecast)
-        else :
-            stat["Percent Forecast"].append(diff_percentage_forecast)
 
     stat["Close"] = close_price
     stat["Diff"] = diff

@@ -6,6 +6,7 @@ st.set_page_config(layout='wide')
 from utils.utils import *
 from data_collecting.data_collecting import *
 from inference.prediction import *
+from inference.fine_tuning import *
 import time
 import yfinance as yf
 
@@ -46,15 +47,6 @@ def main() :
             st.session_state.code = st.session_state.new_code[:4]
             st.session_state.horizontals = []
     
-    # Get the daily data spans for 10 years.
-    daily_data, _ = get_stock(ticker=st.session_state.code.lower())
-    
-    # Forecast the next 10 days prices.
-    model = get_model()
-    daily_data = prepare_data(daily_data)
-    forecast = predict(model, daily_data)
-    dates = get_forecast_date()
-    
     # Function to Update Metric and the Candlestick Chart
     def update_data(placeholder, ma_arr: list, colors: dict, h_lines: list, stochastic: list) :
         
@@ -75,7 +67,7 @@ def main() :
                                                interval=st.session_state.interval_filter)
                 
             # Get the closed price metric
-            stock_metric = get_metric(stock_data, forecast)
+            stock_metric = get_metric(stock_data)
             
             # Show the metric in column 2
             col2.metric(label="Close Price",
@@ -102,12 +94,6 @@ def main() :
                 
             # Handle candlestick hoverinfo background color.
             fig.update_traces(hoverlabel=dict(bgcolor=hover_bg_color), selector=dict(type="candlestick"))
-            
-            # If interval is daily, then plot the forecasted prices.
-            if st.session_state.interval_filter == "1d" :
-                fig.add_trace(go.Scatter(x=dates, y=forecast, mode='lines',
-                                         line=dict(color=line_coloring(forecast), width=2),
-                                         name="Predicted"))
                 
             # Display the plot.
             st.plotly_chart(fig, use_container_width=True)
@@ -124,7 +110,7 @@ def main() :
     name = option[5:]
     
     # Defining Three Tabs
-    dashboard, news, download = st.tabs(["Dashboard", "News", "Download Tabular Data"])
+    dashboard, prediction, news, download = st.tabs(["Dashboard", "Predict", "News", "Download Tabular Data"])
     
     # Sidebar
     with st.sidebar :
@@ -345,20 +331,6 @@ def main() :
         
         # Run update_data() for the first time.
         update_data(placeholder, st.session_state.moving_avgs, st.session_state.colors, st.session_state.horizontals, st.session_state.stochastic)
-        
-        # Predictions Section.
-        st.markdown("<h3 style='text-align:center; margin: 3px 0px;'>Predictions</h3>", unsafe_allow_html=True)
-        
-        # Display the 10 predictions.
-        predictions = st.columns(5)
-        for i in range(5) :
-            with predictions[i] :
-                st.metric(label=dates[i],
-                          value="Rp {0:.2f}".format(forecast[i]),
-                          delta="{0} ({1} %)".format(stock_metric['Diff Forecast'][i], stock_metric['Percent Forecast'][i]))
-                st.metric(label=dates[i+5],
-                          value="Rp {0:.2f}".format(forecast[i+5]),
-                          delta="{0} ({1} %)".format(stock_metric['Diff Forecast'][i+5], stock_metric['Percent Forecast'][i+5]))
     
     # News tab. Displaying the news based on the selected stock code.
     with news :
@@ -388,6 +360,30 @@ def main() :
         st.download_button("Download as CSV", data=stock_data.to_csv(),
                            file_name="{}_{}.csv".format(st.session_state.code, date), mime="text/csv")
     
+    with prediction :
+        with st.expander("Attention...") :
+            st.markdown("Train the model will take around 1-2 minutes.\
+            Please wait, and while waiting, you could take a cup of coffee\
+            :coffee: :blush:")
+        
+        if st.button("Predict Now!") :
+            # Get the daily data spans for 10 years.
+            daily_data, _ = get_stock(ticker=st.session_state.code.lower())
+            
+            # Retrain the model and forecast the next 10 days prices.
+            model = get_model()
+            forecast = fine_tuning(model, daily_data)
+            
+            del daily_data
+            daily_data, datebreaks = get_stock(ticker=st.session_state.code.lower(),
+                                               period="6mo", interval="1d")
+            
+            predict_fig = show_prediction_chart(daily_data, forecast, datebreaks)
+            st.plotly_chart(predict_fig)
+            
+            prediction_df = show_prediction_table(forecast)
+            st.dataframe(prediction_df, use_container_width=True)
+        
     # If it's not weekend and the hour is within the active market time. Use UTC+7 timezone.
     while (hour >= 9 and hour <= 16) and realtime and not (day == "Saturday" or day == "Sunday") :
         _, day, hour, minute = get_today()
