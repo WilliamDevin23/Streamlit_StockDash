@@ -23,7 +23,7 @@ def get_articles(code) :
     return values
   
 def to_dataframe(values) :
-    df = pd.DataFrame(values, columns=["Code", "Title", "Description", "URL", "Publisher", "Date"])
+    df = pd.DataFrame(values, columns=["Code", "Title", "URL", "Publisher", "Date"])
     return df
   
 def change_date_format(articles_df) :
