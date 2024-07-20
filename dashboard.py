@@ -330,12 +330,12 @@ def main() :
         
         # Timer Section (for minutes and hour timeframe only)
         date, day, hour, minute = get_today()
-        market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" or day != "Sunday")
+        market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" and day != "Sunday")
         lower_than_daily = st.session_state.interval_filter == "5m" or st.session_state.interval_filter == "1h"
         while market_close and lower_than_daily :
             date, day, hour, minute = get_today()
             timer(placeholder)
-            market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" or day != "Sunday")
+            market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" and day != "Sunday")
             
             # Emptying the other tabs
             with news :
