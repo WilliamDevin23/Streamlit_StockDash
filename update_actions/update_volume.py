@@ -6,7 +6,7 @@ import os
 import pytz
 from datetime import datetime
 
-jkt_day = datetime.now(pyzt.timezone('Asia/Jakarta')).strftime("%A")
+jkt_day = datetime.now(pytz.timezone('Asia/Jakarta')).strftime("%A")
 
 conn_str = os.getenv('NEON_CONN_STR')
 conn = psycopg2.connect(conn_str)
