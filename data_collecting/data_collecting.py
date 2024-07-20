@@ -131,9 +131,9 @@ def get_maximum_date(code) :
 
 @st.cache_data
 def is_updated(code) :
-    today_date, _, _, _ = get_today()
+    today_date, today_day, _, _ = get_today()
     updated_date = get_maximum_date(code)
-    if today_date == updated_date :
+    if today_date == updated_date or today_day == "Saturday" or today_day == "Sunday" :
         return True
     else :
         return False
