@@ -4,4 +4,5 @@ numpy==1.26.4
 yfinance==0.2.38
 pytz==2024.1
 requests==2.32.3
+bs4==0.0.2
 SQLAlchemy==2.0.31

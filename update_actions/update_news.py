@@ -1,6 +1,4 @@
 import concurrent.futures
-import pandas as pd
-import numpy as np
 from sqlalchemy import create_engine
 import os
 import psycopg2
@@ -23,10 +21,9 @@ with concurrent.futures.ThreadPoolExecutor() as executor :
     for future in concurrent.futures.as_completed(futures) :
         data.append(future.result())
 
-data = np.reshape(data, (-1, 6))
 df = to_dataframe(data)
 df = change_date_format(df)
-df["Publisher"] = df.apply(fill_publisher, axis=1)
+df["URL"] = df["URL"].apply(lambda x: get_link(x))
 
 engine = create_engine(conn_str)
 df.to_sql('news', engine, if_exists='replace', index=False)

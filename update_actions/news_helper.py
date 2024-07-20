@@ -1,38 +1,64 @@
 import requests
+from bs4 import BeautifulSoup4
 import pandas as pd
-import os
+import numpy as np
+import re
+from datetime import datetime
 
 def get_articles(code) :
-    url = "https://news-api14.p.rapidapi.com/v2/search/articles"
-    headers = {
-    "x-rapidapi-key": os.getenv('RAPIDAPI_KEY'),
-    "x-rapidapi-host": "news-api14.p.rapidapi.com"
-    }
+    if code == "IHSG" :
+        QUERY = "IHSG"
+    elif code == "LQ45" :
+        QUERY = "LQ45"
+    else :
+        QUERY = "saham+{}".format(code)
+    
+    url = "https://news.google.com/rss/search?q={}&hl=id&gl=ID&ceid=ID:id".format(QUERY)
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, features='xml')
+
     values = []
-    querystring = {"query":code,"language":"id","limit":"10"}
-    response = requests.get(url, headers=headers, params=querystring)
-    for article in response.json()['data'] :
+    titles = soup.find_all("title")
+    urls = soup.find_all("link")
+    pub_dates = soup.find_all("pubDate")
+    pubs = soup.find_all("source")
+    for i in range(len(titles)) :
+        if len(values) == 10 :
+            break
         article_record = []
+
+        title = titles[i+1].get_text().split(" - ")[0]
+        url_ = urls[i+1].get_text()
+        pub_date_splitted = pub_dates[i].get_text().split()
+        pub_date = " ".join([pub_date_splitted[n] for n in range(1,4)])
+        source = pubs[i].get_text()
+
         article_record.append(code)
-        article_record.append(article["title"])
-        article_record.append(article["excerpt"])
-        article_record.append(article["url"])
-        article_record.append(article["publisher"]['name'])
-        article_record.append(article["date"])
+        article_record.append(title)
+        article_record.append(url_)
+        article_record.append(pub_date)
+        article_record.append(source)
+
         values.append(article_record)
     return values
   
 def to_dataframe(values) :
-    df = pd.DataFrame(values, columns=["Code", "Title", "URL", "Publisher", "Date"])
+    values = np.reshape(values, (-1, 5))
+    df = pd.DataFrame(values, columns=["Code", "Title", "URL", "Date", "Publisher"])
     return df
   
-def change_date_format(articles_df) :
-    articles_df["Date"] = pd.to_datetime(articles_df["Date"])
-    articles_df["Date"] = articles_df["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
-    return articles_df
+def change_date_format(df) :
+    df["Date"] = df["Date"].apply(lambda x: datetime.strptime(x, "%d %b %Y"))
+    return df
 
-def fill_publisher(row):
-    if "https" in row["Publisher"] or row["Publisher"] == '':
-        return row["URL"].split("/")[2].replace("www.", "")
-    else :
-        return row["Publisher"]
+def get_link(links) :
+    links = links.replace("https://news.google.com/rss/articles/", "")
+    end_idx = links.index("?")
+    links = links[:end_idx]
+    links = re.sub(r'[^A-Za-z0-9\+=/]', 'A', links)
+    if len(links) % 4 != 0 :
+        links += "="* (4 - len(links) % 4)
+    translated = base64.b64decode(links)
+    translated = translated.decode("iso-8859-1")
+    url_match = re.findall(r"https*:[\-\.A-Za-z0-9/]*", translated)[0]
+    return url_match
