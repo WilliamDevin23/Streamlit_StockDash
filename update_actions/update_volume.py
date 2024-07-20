@@ -15,6 +15,10 @@ cur = conn.cursor()
 composites = ["^JKSE", "^JKLQ45"]
 
 def update_volume(cursor, code) :
+    if code == "^JKSE" :
+        db_name = "ihsg"
+    else :
+        db_name = "lq45"
     
     two_days_data = yf.Ticker(code).history("2d", "1d")
     two_days_data.index = two_days_data.index.strftime("%Y-%m-%d")
@@ -26,7 +30,7 @@ def update_volume(cursor, code) :
         yesterday_date = two_days_data.index.values[0]
         yesterday_volume = two_days_data["Volume"].values[0]
     
-    cur.execute("""UPDATE {} SET "Volume" = {} WHERE "Date" = '{}';""".format(code, yesterday_volume, yesterday_date))
+    cur.execute("""UPDATE {} SET "Volume" = {} WHERE "Date" = '{}';""".format(db_name, yesterday_volume, yesterday_date))
 
 for code in composites :
     update_volume(cur, code)
