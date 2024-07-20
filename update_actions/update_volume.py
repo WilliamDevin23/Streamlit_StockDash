@@ -29,7 +29,7 @@ def update_volume(cursor, code) :
     cur.execute("""UPDATE {} SET "Volume" = {} WHERE "Date" = '{}';""".format(code, yesterday_volume, yesterday_date))
 
 for code in composites :
-    update_price(cur, code)
+    update_volume(cur, code)
 
 conn.commit()
 
