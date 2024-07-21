@@ -23,7 +23,7 @@ def compile_cloned_model(model) :
     model.compile(loss=tf.keras.losses.MeanAbsoluteError(),
                   optimizer=tf.keras.optimizers.Adam(0.001))
 
-@st.cache_data
+@st.cache_data(ttl=3600)
 def fine_tuning(_model, daily_data) :
     callback = get_callback()
     daily_data = prepare_data(daily_data)
@@ -31,11 +31,11 @@ def fine_tuning(_model, daily_data) :
     windowed_data = windowed_dataset(normalized_data[-200:, :],
                                      100, 10, 64)
     compile_cloned_model(_model)
-    _model.fit(windowed_data, epochs=8, callbacks=[callback])
+    _model.fit(windowed_data, epochs=20, callbacks=[callback])
     forecast = predict(_model, daily_data)
     return forecast
 
-@st.cache_data
+@st.cache_data(ttl=3600)
 def show_prediction_chart(daily_data, forecast, datebreaks) :
 	dates = get_forecast_date()
 	prediction_chart = make_graph(daily_data, datebreaks, "1d",
@@ -47,7 +47,7 @@ def show_prediction_chart(daily_data, forecast, datebreaks) :
 										  
 	return prediction_chart
 
-@st.cache_data
+@st.cache_data(ttl=3600)
 def show_prediction_table(forecast) :
 	dates = get_forecast_date()
 	pred_df = pd.DataFrame({"Date":dates,

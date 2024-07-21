@@ -7,7 +7,6 @@ from datetime import datetime
 import time
 from inference.data_preprocessing import stochastic
 
-@st.cache_data
 def get_metric(data):
     stat = {}
     open_price = data["Open"].values[0]
@@ -88,7 +87,6 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr, colors, stochasti
                                      marker={'color':color, 'size':size}, hoverinfo='skip'))
     return fig
 
-@st.cache_data
 def add_ma(data, window_size) :
     if window_size is not None :
         for w in window_size :
