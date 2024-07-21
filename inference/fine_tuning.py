@@ -6,15 +6,32 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
+def windowed_dataset(data, n_past, n_future, batch_size):
+    dataset = tf.data.Dataset.from_tensor_slices(data)
+    dataset = dataset.window(n_past+n_future, shift=1, drop_remainder=True)
+    dataset = dataset.flat_map(lambda window: window.batch(n_past+n_future))
+    dataset = dataset.map(lambda window: (window[:n_past], window[n_past:, :1]))
+    dataset = dataset.batch(batch_size).prefetch(1)
+    return dataset
+
+def clone_model(model) :
+    cloned_model = tf.keras.models.clone_model(model)
+    cloned_model.set_weights(model.get_weights())
+    return cloned_model
+
+def compile_cloned_model(model) :
+    model.compile(loss=tf.keras.losses.MeanAbsoluteError(),
+                  optimizer=tf.keras.optimizers.Adam(0.001))
+
 @st.cache_data
 def fine_tuning(_model, daily_data) :
     callback = get_callback()
     daily_data = prepare_data(daily_data)
     normalized_data = normalize_data(daily_data, daily_data.max(axis=0), daily_data.min(axis=0))
-    retrain_data = np.expand_dims(normalized_data[-111:-11, :], axis=0)
-    retrain_label = np.expand_dims(normalized_data[-11:-1, 0], axis=0)
-    _model.fit(x=retrain_data, y=retrain_label,
-               epochs=8, callbacks=[callback])
+    windowed_data = windowed_dataset(normalized_data[-200:, :],
+                                     100, 10, 64)
+    compile_cloned_model(_model)
+    _model.fit(windowed_data, epochs=8, callbacks=[callback])
     forecast = predict(_model, daily_data)
     return forecast
 
@@ -26,7 +43,7 @@ def show_prediction_chart(daily_data, forecast, datebreaks) :
 	
 	prediction_chart.add_trace(go.Scatter(x=dates, y=forecast, mode='lines',
 										  line=dict(color=line_coloring(forecast), width=2),
-										  name="Predicted"))
+										  name="Predicted", showlegend=False))
 										  
 	return prediction_chart
 
@@ -42,7 +59,7 @@ def show_prediction_table(forecast) :
 def get_callback() :
     class myCallback(tf.keras.callbacks.Callback) :
         def on_epoch_end(self, epoch, logs=None) :
-            if (logs.get('loss') <= 0.015) :
+            if (logs.get('loss') <= 0.02) :
                 self.model.stop_training = True
     mycallback = myCallback()
     return mycallback

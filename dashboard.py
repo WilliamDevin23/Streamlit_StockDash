@@ -1,7 +1,7 @@
 import streamlit as st
 
 # Streamlit Wide Layout
-st.set_page_config(layout='wide')
+st.set_page_config(layout='wide', page_title="LQ45 Dashboard")
 
 from utils.utils import *
 from data_collecting.data_collecting import *
@@ -99,7 +99,7 @@ def main() :
             st.plotly_chart(fig, use_container_width=True)
     
     # Title
-    st.markdown("<h1 style='text-align: center'>Indonesian LQ45 Dashboard</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center'>LQ45 Dashboard</h1>", unsafe_allow_html=True)
     
     # Code SelectBox
     option = st.selectbox("Stock Codes",
@@ -110,7 +110,7 @@ def main() :
     name = option[5:]
     
     # Defining Three Tabs
-    dashboard, prediction, news, download = st.tabs(["Dashboard", "Predict", "News", "Download Tabular Data"])
+    dashboard, prediction, news, download = st.tabs(["Dashboard", "Predict", "News", "Download"])
     
     # Sidebar
     with st.sidebar :
@@ -328,6 +328,8 @@ def main() :
                 st.empty()
             with download :
                 st.empty()
+            with prediction :
+                st.empty()
         
         # Run update_data() for the first time.
         update_data(placeholder, st.session_state.moving_avgs, st.session_state.colors, st.session_state.horizontals, st.session_state.stochastic)
@@ -364,7 +366,7 @@ def main() :
         with st.expander("Attention...") :
             st.markdown("Train the model will take around 1-2 minutes.\
             Please wait, and while waiting, you could take a cup of coffee\
-            :coffee: :blush:")
+            :coffee: :smile:")
         
         if st.button("Predict Now!") :
             # Get the daily data spans for 10 years.
@@ -372,7 +374,8 @@ def main() :
             
             # Retrain the model and forecast the next 10 days prices.
             model = get_model()
-            forecast = fine_tuning(model, daily_data)
+            cloned_model = clone_model(model)
+            forecast = fine_tuning(cloned_model, daily_data)
             
             del daily_data
             daily_data, datebreaks = get_stock(ticker=st.session_state.code.lower(),
