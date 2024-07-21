@@ -31,7 +31,7 @@ def fine_tuning(_model, daily_data) :
     windowed_data = windowed_dataset(normalized_data[-200:, :],
                                      100, 10, 64)
     compile_cloned_model(_model)
-    _model.fit(windowed_data, epochs=20, callbacks=[callback])
+    _model.fit(windowed_data, epochs=20, callbacks=[callback], verbose=0)
     forecast = predict(_model, daily_data)
     return forecast
 
