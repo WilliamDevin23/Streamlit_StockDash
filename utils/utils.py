@@ -5,7 +5,7 @@ import streamlit as st
 import pytz
 from datetime import datetime
 import time
-from inference.data_preprocessing import stochastic
+from inference.data_processing import stochastic
 
 def get_metric(data):
     stat = {}

@@ -5,7 +5,7 @@ import pandas as pd
 import pytz
 import re
 from datetime import datetime
-from inference.data_preprocessing import prepare_data, resample
+from inference.data_processing import resample
 from inference.prediction import get_forecast_date
 
 session = LimiterSession(per_minute=12)

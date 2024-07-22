@@ -90,7 +90,8 @@ def main() :
                                   annotation_font_color=h_color, row=1, col=1)
                 
             # List that stores hoverinfo background colors corresponding to each data.
-            hover_bg_color = ["green" if close >= open_ else "red" for open_, close in zip(stock_data["Open"].values, stock_data["Close"].values)]
+            hover_bg_color = ["green" if close >= open_ else "red" for open_, close in zip(stock_data["Open"].values,
+                                                                                           stock_data["Close"].values)]
                 
             # Handle candlestick hoverinfo background color.
             fig.update_traces(hoverlabel=dict(bgcolor=hover_bg_color), selector=dict(type="candlestick"))
@@ -185,7 +186,8 @@ def main() :
                 
                 with ma_col :
                     # Number input for Moving Average period.
-                    ma = st.number_input(label="Add MA", format="%d", step=1, value=None, min_value=3)
+                    ma = st.number_input(label="Add MA", format="%d",
+                                         step=1, value=None, min_value=3)
                     # Handle invalid inputs.
                     if ma is None or ma < 3 :
                         ma = 3
@@ -261,7 +263,8 @@ def main() :
                 # First column.
                 with period :         
                     # Number input for stochastic period.
-                    period = st.number_input(label="Period", format="%d", step=1, value=None, min_value=5)
+                    period = st.number_input(label="Period", format="%d",
+                                             step=1, value=None, min_value=5)
                     
                     # Handle invalid inputs.
                     if period is None or period < 5 :
@@ -303,7 +306,8 @@ def main() :
             
             # Delete Stochastic button.
             clear_stoch = st.button("Delete Stochastic", use_container_width=True,
-                                    disabled = len(st.session_state.stochastic) == 0, on_click=clear_stochastic)
+                                    disabled = len(st.session_state.stochastic) == 0,
+                                    on_click=clear_stochastic)
     
     # First Tab : Dashboard
     with dashboard :
@@ -332,7 +336,9 @@ def main() :
                 st.empty()
         
         # Run update_data() for the first time.
-        update_data(placeholder, st.session_state.moving_avgs, st.session_state.colors, st.session_state.horizontals, st.session_state.stochastic)
+        update_data(placeholder, st.session_state.moving_avgs,
+                    st.session_state.colors, st.session_state.horizontals,
+                    st.session_state.stochastic)
     
     # News tab. Displaying the news based on the selected stock code.
     with news :
@@ -340,9 +346,12 @@ def main() :
         for news in news_arr :
             container = st.container(border=True)
             with container :
-                st.markdown(f"<h3><a href='{news[2]}' style='text-decoration: none;'>{news[1]}</a></h3>", unsafe_allow_html=True)
-                st.markdown(f"""<p style='color: gray;'>{news[3]}</p>""", unsafe_allow_html=True)
-                st.markdown(f"""<p style='color: gray; text-align: right;'>{news[4]}</p>""", unsafe_allow_html=True)
+                st.markdown(f"<h3><a href='{news[2]}' style='text-decoration: none;'>{news[1]}</a></h3>",
+                            unsafe_allow_html=True)
+                st.markdown(f"""<p style='color: gray;'>{news[3]}</p>""",
+                            unsafe_allow_html=True)
+                st.markdown(f"""<p style='color: gray; text-align: right;'>{news[4]}</p>""",
+                            unsafe_allow_html=True)
     
     # Download tab. Download the tabular data as CSV based on the period and interval filter.
     with download :
@@ -360,7 +369,8 @@ def main() :
         
         # Download button.
         st.download_button("Download as CSV", data=stock_data.to_csv(),
-                           file_name="{}_{}.csv".format(st.session_state.code, date), mime="text/csv")
+                           file_name="{}_{}.csv".format(st.session_state.code, date),
+                           mime="text/csv")
     
     with prediction :
         with st.expander("Attention...") :
@@ -391,7 +401,9 @@ def main() :
     while (hour >= 9 and hour <= 16) and realtime and not (day == "Saturday" or day == "Sunday") :
         _, day, hour, minute = get_today()
         with dashboard :
-            update_data(placeholder, st.session_state.moving_avgs, st.session_state.colors, st.session_state.horizontals, st.session_state.stochastic)
+            update_data(placeholder, st.session_state.moving_avgs,
+                        st.session_state.colors, st.session_state.horizontals,
+                        st.session_state.stochastic)
         with download :
             update_table()
         time.sleep(60)
