@@ -29,7 +29,6 @@ def get_news(code) :
     news_df = conn.query("""SELECT * FROM news WHERE Code = '{}' ORDER BY Date DESC;""".format(code), ttl=0)
     return news_df.values
 
-@st.cache_data(ttl=3600)
 def get_stock(ticker=None, period="10y", interval="1d"):
     
     if ticker == "ihsg" :
