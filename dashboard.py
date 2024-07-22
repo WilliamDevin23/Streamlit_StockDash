@@ -62,7 +62,7 @@ def main() :
                 st.markdown(f"<h3>{st.session_state.code}</h3>", unsafe_allow_html=True)
                 st.write(name)
             
-            stock_data, datebreaks = get_stock(ticker=st.session_state.code.lower(),
+            stock_data, datebreaks = get_stock(code=st.session_state.code.lower(),
                                                period=st.session_state.period_filter,
                                                interval=st.session_state.interval_filter)
                 
@@ -380,18 +380,14 @@ def main() :
         
         if st.button("Predict Now!") :
             # Get the daily data spans for 10 years.
-            daily_data, _ = get_stock(ticker=st.session_state.code.lower())
+            daily_data, datebreaks = get_stock(code=st.session_state.code.lower(),
+                                               period="10y", interval="1d")
             
             # Retrain the model and forecast the next 10 days prices.
             model = get_model()
-            cloned_model = clone_model(model)
-            forecast = fine_tuning(cloned_model, daily_data)
+            forecast = fine_tuning(model, daily_data)
             
-            del daily_data
-            daily_data, datebreaks = get_stock(ticker=st.session_state.code.lower(),
-                                               period="6mo", interval="1d")
-            
-            predict_fig = show_prediction_chart(daily_data, forecast, datebreaks)
+            predict_fig = show_prediction_chart(daily_data.iloc[-100:], forecast, datebreaks)
             st.plotly_chart(predict_fig)
             
             prediction_df = show_prediction_table(forecast)
@@ -406,6 +402,9 @@ def main() :
                         st.session_state.stochastic)
         with download :
             update_table()
+        if not is_updated(st.session_state.code) :
+            st.cache_data.clear()
+        
         time.sleep(60)
 
 if __name__ == "__main__":

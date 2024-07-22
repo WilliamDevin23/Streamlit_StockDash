@@ -24,15 +24,27 @@ def compile_cloned_model(model) :
 
 @st.cache_data(ttl=3600)
 def fine_tuning(_model, daily_data) :
-    callback = get_callback()
+    close_recent = daily_data["Close"].values[-1]
     daily_data = prepare_data(daily_data)
-    normalized_data = normalize_data(daily_data, daily_data.max(axis=0), daily_data.min(axis=0))
-    windowed_data = windowed_dataset(normalized_data[-200:, :],
-                                     100, 10, 64)
-    compile_cloned_model(_model)
-    _model.fit(windowed_data, epochs=20, callbacks=[callback], verbose=0)
-    forecast = predict(_model, daily_data)
-    return forecast
+    base_model_prediction = predict(_model, daily_data)
+    diff = abs(base_model_prediction[0] - close_recent) / close_recent
+    if diff > 0.02 :
+        _cloned_model = clone_model(_model)
+        callback = get_callback()
+        normalized_data = normalize_data(daily_data, daily_data.max(axis=0), daily_data.min(axis=0))
+        windowed_data = windowed_dataset(normalized_data[-111:, :],
+                                         100, 10, 1)
+        compile_cloned_model(_cloned_model)
+        _cloned_model.fit(windowed_data, epochs=10,
+                          callbacks=[callback], verbose=1,
+                          use_multiprocessing=True)
+        
+        cloned_model_prediction = predict(_cloned_model, daily_data)
+    
+        cloned_diff = abs(cloned_model_prediction[0] - close_recent) / close_recent
+        if diff > cloned_diff :
+            return cloned_model_prediction
+    return base_model_prediction
 
 @st.cache_data(ttl=3600)
 def show_prediction_chart(daily_data, forecast, datebreaks) :

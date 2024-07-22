@@ -29,14 +29,19 @@ def get_news(code) :
     news_df = conn.query("""SELECT * FROM news WHERE Code = '{}' ORDER BY Date DESC;""".format(code), ttl=0)
     return news_df.values
 
-def get_stock(ticker=None, period="10y", interval="1d"):
+@st.cache_data
+def get_stock_from_db(code, first_date):
+    stock_data = conn.query("""SELECT * FROM {} WHERE "Date" >= '{}';""".format(code[:4], first_date))
+    return stock_data    
+
+def get_stock(code=None, period="10y", interval="1d"):
     
-    if ticker == "ihsg" :
+    if code == "ihsg" :
         stock_tick = yf.Ticker("^JKSE", session=session)
-    elif ticker == "lq45" :
+    elif code == "lq45" :
         stock_tick = yf.Ticker("^JKLQ45", session=session)
     else :
-        stock_tick = yf.Ticker(ticker.upper()+".JK", session=session)
+        stock_tick = yf.Ticker(code.upper()+".JK", session=session)
     
     predicted_days = get_forecast_date()
     
@@ -56,9 +61,9 @@ def get_stock(ticker=None, period="10y", interval="1d"):
     
     
     else :
-        updated_status = is_updated(ticker)
-        first_date = get_first_date(ticker, period, interval)
-        stock_data = conn.query("""SELECT * FROM {} WHERE "Date" >= '{}';""".format(ticker[:4], first_date))
+        updated_status = is_updated(code)
+        first_date = get_first_date(code, period, interval)
+        stock_data = get_stock_from_db(code, first_date)
         
         if not updated_status :
             today_data = stock_tick.history(period="1d", interval="1d", prepost=True)
@@ -128,9 +133,17 @@ def get_maximum_date(code) :
     return max_date
 
 def is_updated(code) :
-    today_date, today_day, _, _ = get_today()
-    updated_date = get_maximum_date(code)
-    if today_date == updated_date or today_day == "Saturday" or today_day == "Sunday" :
+    if code == "ihsg" :
+        tick = "^JKSE"
+    elif code == "lq45" :
+        tick = "^JKLQ45"
+    else :
+        tick = code.upper() + ".JK"
+    today_data = yf.Ticker(tick).history("1d", "1d").reset_index()
+    today_data["Date"] = today_data["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
+    latest_date_from_yf = today_data["Date"].values[-1]
+    latest_date_from_db = get_maximum_date(code).strftime("%Y-%m-%d")
+    if latest_date_from_db == latest_date_from_yf :
         return True
     else :
         return False
