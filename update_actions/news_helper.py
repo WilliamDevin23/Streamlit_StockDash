@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import numpy as np
 import re
+import base64
 from datetime import datetime
 
 def get_articles(code) :
