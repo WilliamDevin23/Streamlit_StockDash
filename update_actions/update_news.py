@@ -7,7 +7,7 @@ from news_helper import *
 conn_str = os.getenv('NEON_CONN_STR')
 conn = psycopg2.connect(conn_str)
 cur = conn.cursor()
-cur.execute("SELECT code FROM lq45;")
+cur.execute("SELECT code FROM lq45_codes;")
 codes = cur.fetchall()
 codes = sorted([c[0] for c in codes] + ["IHSG", "LQ45"])
 cur.close()
