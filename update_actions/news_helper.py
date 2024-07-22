@@ -51,14 +51,17 @@ def change_date_format(df) :
     df["Date"] = df["Date"].apply(lambda x: datetime.strptime(x, "%d %b %Y"))
     return df
 
-def get_link(links) :
-    links = links.replace("https://news.google.com/rss/articles/", "")
-    end_idx = links.index("?")
-    links = links[:end_idx]
-    links = re.sub(r'[^A-Za-z0-9\+=/]', 'A', links)
-    if len(links) % 4 != 0 :
-        links += "="* (4 - len(links) % 4)
-    translated = base64.b64decode(links)
-    translated = translated.decode("iso-8859-1")
-    url_match = re.findall(r"https*:[\-\.A-Za-z0-9/]*", translated)[0]
-    return url_match
+def get_link(link) :
+    try :
+        link_2 = link_2.replace("https://news.google.com/rss/articles/", "")
+        end_idx = link_2.index("?")
+        link_2 = link_2[:end_idx]
+        link_2 = re.sub(r'[^A-Za-z0-9\+=/]', 'A', link_2)
+        if len(link_2) % 4 != 0 :
+            link_2 += "="* (4 - len(link_2) % 4)
+        translated = base64.b64decode(link_2)
+        translated = translated.decode("iso-8859-1")
+        url_match = re.findall(r"https*:[\-\.A-Za-z0-9/]*", translated)[0]
+        return url_match
+    except Exception as e :
+        return link
