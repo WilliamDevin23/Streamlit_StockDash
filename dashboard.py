@@ -54,7 +54,7 @@ def main() :
         global stock_data, stock_metric, datebreaks, fig
         
         # Inside the Placeholder
-        with placeholder :
+        with placeholder.container() :
                 
             # Make 2 columns : first for code name, second for the metric
             col1, col2 = st.columns(2)
