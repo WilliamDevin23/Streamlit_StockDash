@@ -37,7 +37,9 @@ def main() :
     if "moving_avgs" not in st.session_state : st.session_state.moving_avgs = []
     if "stochastic" not in st.session_state : st.session_state.stochastic = []
     if "horizontals" not in st.session_state : st.session_state.horizontals = []
-    if "colors" not in st.session_state : st.session_state.colors = {"ma_color": [], "h_color":[], "stoch_color": []}
+    if "colors" not in st.session_state : st.session_state.colors = {"ma_color": [],
+                                                                     "h_color":[],
+                                                                     "stoch_color": []}
     if "ma_disable" not in st.session_state : st.session_state.ma_disable = True
     if "h_disable" not in st.session_state : st.session_state.h_disable = True
     if "realtime" not in st.session_state : st.session_state.realtime = True
@@ -60,13 +62,15 @@ def main() :
     name = option[5:]
     
     # Defining Three Tabs
-    dashboard, prediction, news, download = st.tabs(["Dashboard", "Predict", "News", "Download"])
+    dashboard, prediction, news, download = st.tabs(["Dashboard", "Predict",
+                                                     "News", "Download"])
     
-    #Toggle Button to Activate/Deactivate Auto Update
-    realtime = st.toggle("Auto Update", value=True)
-    
-    # Placeholder for the Candlestick Chart and the Price Metric
-    placeholder = st.empty()
+    with dashboard :
+        #Toggle Button to Activate/Deactivate Auto Update
+        realtime = st.toggle("Auto Update", value=True)
+        
+        # Placeholder for the Candlestick Chart and the Price Metric
+        placeholder = st.empty()
     
     # Function to Update Metric and the Candlestick Chart
     def update_data(ma_arr: list, colors: dict, h_lines: list, stochastic: list) :
@@ -74,51 +78,54 @@ def main() :
         # Global variables for further use outside the function
         global stock_data, stock_metric, datebreaks, fig
         
-        # Inside the Placeholder
-        with placeholder.container() :
+        with dashboard :
+            # Inside the Placeholder
+            with placeholder.container() :
+                    
+                # Make 2 columns : first for code name, second for the metric
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown(f"<h3>{st.session_state.code}</h3>", unsafe_allow_html=True)
+                    st.write(name)
                 
-            # Make 2 columns : first for code name, second for the metric
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown(f"<h3>{st.session_state.code}</h3>", unsafe_allow_html=True)
-                st.write(name)
-            
-            stock_data, datebreaks = get_stock(code=st.session_state.code.lower(),
-                                               period=st.session_state.period_filter,
-                                               interval=st.session_state.interval_filter)
+                stock_data, datebreaks = get_stock(code=st.session_state.code.lower(),
+                                                   period=st.session_state.period_filter,
+                                                   interval=st.session_state.interval_filter)
+                    
+                # Get the closed price metric
+                stock_metric = get_metric(stock_data)
                 
-            # Get the closed price metric
-            stock_metric = get_metric(stock_data)
-            
-            # Show the metric in column 2
-            col2.metric(label="Close Price",
-                        value="Rp {0}".format(stock_metric['Close']),
-                        delta="{0} ({1} %)".format(stock_metric['Diff'],
-                                                   stock_metric['Percent']))
-            
-            # Make the candlestick chart
-            fig = make_graph(stock_data, datebreaks,
-                             st.session_state.interval_filter,
-                             st.session_state.chart_type,
-                             ma_arr, colors, stochastic)
+                # Show the metric in column 2
+                col2.metric(label="Close Price",
+                            value="Rp {0}".format(stock_metric['Close']),
+                            delta="{0} ({1} %)".format(stock_metric['Diff'],
+                                                       stock_metric['Percent']))
                 
-            # Draw horizontal lines on the chart if the list isn't empty.
-            if len(h_lines) > 0 :
-                for h, h_color in zip(h_lines, colors["h_color"]) :
-                    fig.add_hline(h, line_color=h_color,
-                                  annotation_text=h,
-                                  annotation_position='bottom right',
-                                  annotation_font_color=h_color, row=1, col=1)
-                
-            # List that stores hoverinfo background colors corresponding to each data.
-            hover_bg_color = ["green" if close >= open_ else "red" for open_, close in zip(stock_data["Open"].values,
-                                                                                           stock_data["Close"].values)]
-                
-            # Handle candlestick hoverinfo background color.
-            fig.update_traces(hoverlabel=dict(bgcolor=hover_bg_color), selector=dict(type="candlestick"))
-                
-            # Display the plot.
-            st.plotly_chart(fig, use_container_width=True)
+                # Make the candlestick chart
+                fig = make_graph(stock_data, datebreaks,
+                                 st.session_state.interval_filter,
+                                 st.session_state.chart_type,
+                                 ma_arr, colors, stochastic)
+                    
+                # Draw horizontal lines on the chart if the list isn't empty.
+                if len(h_lines) > 0 :
+                    for h, h_color in zip(h_lines, colors["h_color"]) :
+                        fig.add_hline(h, line_color=h_color,
+                                      annotation_text=h,
+                                      annotation_position='bottom right',
+                                      annotation_font_color=h_color, row=1, col=1)
+                    
+                # List that stores hoverinfo background colors corresponding to each data.
+                hover_bg_color = ["green" if close >= open_\
+                    else "red" for open_, close in zip(stock_data["Open"].values,
+                                                       stock_data["Close"].values)]
+                    
+                # Handle candlestick hoverinfo background color.
+                fig.update_traces(hoverlabel=dict(bgcolor=hover_bg_color),
+                                  selector=dict(type="candlestick"))
+                    
+                # Display the plot.
+                st.plotly_chart(fig, use_container_width=True)
     
     # Sidebar
     with st.sidebar :
@@ -142,15 +149,11 @@ def main() :
                 st.session_state.interval_filter = "5m"
             else:
                 st.session_state.interval_filter = "1d"
-            
-            placeholder.empty()
         
         # Updating interval session states. Triggered when the selected interval in the selectbox is changed.
         def update_interval():
             if st.session_state.new_interval != st.session_state.interval_filter:
                 st.session_state.interval_filter = st.session_state.new_interval
-            
-            placeholder.empty()
         
         # Updating chart type session states. Triggered when the selected chart type in the selectbox is changed.
         def update_chart_type():
@@ -328,7 +331,6 @@ def main() :
     
     # First Tab : Dashboard
     with dashboard :
-        
         # Timer Section (for minutes and hour timeframe only)
         date, day, hour, minute = get_today()
         market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" and day != "Sunday")
@@ -410,11 +412,10 @@ def main() :
         
     # If it's not weekend and the hour is within the active market time. Use UTC+7 timezone.
     while (hour >= 9 and hour <= 16) and realtime and not (day == "Saturday" or day == "Sunday") :
-        _, day, hour, minute = get_today()
-        with dashboard :
-            update_data(st.session_state.moving_avgs,
-                        st.session_state.colors, st.session_state.horizontals,
-                        st.session_state.stochastic)
+        date, _, _, _ = get_today()
+        update_data(st.session_state.moving_avgs,
+                    st.session_state.colors, st.session_state.horizontals,
+                    st.session_state.stochastic)
         with download :
             update_table()
         
@@ -424,4 +425,5 @@ def main() :
         time.sleep(30)
 
 if __name__ == "__main__":
+    date, day, hour, minute = get_today()
     main()
