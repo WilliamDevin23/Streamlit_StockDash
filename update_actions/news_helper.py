@@ -54,7 +54,7 @@ def change_date_format(df) :
 
 def get_link(link) :
     try :
-        link_2 = link_2.replace("https://news.google.com/rss/articles/", "")
+        link_2 = link.replace("https://news.google.com/rss/articles/", "")
         end_idx = link_2.index("?")
         link_2 = link_2[:end_idx]
         link_2 = re.sub(r'[^A-Za-z0-9\+=/]', 'A', link_2)
