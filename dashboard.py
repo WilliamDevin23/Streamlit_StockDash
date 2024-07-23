@@ -407,10 +407,10 @@ def main() :
         with download :
             update_table()
         
-        if not is_updated(st.session_state.code) :
+        if is_updated(st.session_state.code.lower()) :
             st.cache_data.clear()
         
-        time.sleep(60)
+        time.sleep(30)
 
 if __name__ == "__main__":
     main()
