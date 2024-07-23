@@ -1,5 +1,6 @@
 from inference.data_processing import *
 from inference.prediction import *
+from data_collecting.data_collecting import get_forecast_date
 from utils.utils import make_graph, line_coloring
 import plotly.graph_objects as go
 import pandas as pd
@@ -47,8 +48,8 @@ def fine_tuning(_model, daily_data) :
     return base_model_prediction
 
 @st.cache_data(ttl=3600)
-def show_prediction_chart(daily_data, forecast, datebreaks) :
-	dates = get_forecast_date()
+def show_prediction_chart(code, daily_data, forecast, datebreaks) :
+	dates = get_forecast_date(code)
 	prediction_chart = make_graph(daily_data, datebreaks, "1d",
 								  "Candlestick", [], [], [])
 	
@@ -59,8 +60,8 @@ def show_prediction_chart(daily_data, forecast, datebreaks) :
 	return prediction_chart
 
 @st.cache_data(ttl=3600)
-def show_prediction_table(forecast) :
-	dates = get_forecast_date()
+def show_prediction_table(code, forecast) :
+	dates = get_forecast_date(code)
 	pred_df = pd.DataFrame({"Date":dates,
 							"Predicted Close Price":forecast})
 	pred_df.set_index("Date", inplace=True)

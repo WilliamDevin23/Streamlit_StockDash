@@ -375,8 +375,11 @@ def main() :
     with prediction :
         with st.expander("Attention...") :
             st.markdown("Train the model will take around 1-2 minutes.\
-            Please wait, and while waiting, you could take a cup of coffee\
-            :coffee: :smile:")
+            While waiting, you could take a cup of coffee\
+            :coffee: :smile:\nThe prediction is expected to deviate\
+            for around 2% - 5% from the real price.\nPlease be\
+            aware that the model is experimental, and the prediction\
+            should not fully be taken as investment advice.")
         
         if st.button("Predict Now!") :
             # Get the daily data spans for 10 years.
@@ -387,10 +390,11 @@ def main() :
             model = get_model()
             forecast = fine_tuning(model, daily_data)
             
-            predict_fig = show_prediction_chart(daily_data.iloc[-100:], forecast, datebreaks)
+            predict_fig = show_prediction_chart(st.session_state.code, daily_data.iloc[-100:],
+                                                forecast, datebreaks)
             st.plotly_chart(predict_fig)
             
-            prediction_df = show_prediction_table(forecast)
+            prediction_df = show_prediction_table(st.session_state.code, forecast)
             st.dataframe(prediction_df, use_container_width=True)
         
     # If it's not weekend and the hour is within the active market time. Use UTC+7 timezone.
@@ -402,6 +406,7 @@ def main() :
                         st.session_state.stochastic)
         with download :
             update_table()
+        
         if not is_updated(st.session_state.code) :
             st.cache_data.clear()
         

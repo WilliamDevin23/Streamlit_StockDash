@@ -4,9 +4,8 @@ import yfinance as yf
 import pandas as pd
 import pytz
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from inference.data_processing import resample
-from inference.prediction import get_forecast_date
 
 session = LimiterSession(per_minute=12)
 
@@ -24,9 +23,10 @@ def get_codes():
     choice = list(df["Long Name"].values)
     return ["IHSG (Indeks Harga Saham Gabungan)", "LQ45 (Liquid 45)"] + sorted(choice)
 
-@st.cache_data(ttl=3600)
+@st.cache_data
 def get_news(code) :
-    news_df = conn.query("""SELECT * FROM news WHERE Code = '{}' ORDER BY Date DESC;""".format(code), ttl=0)
+    news_df = conn.query("""SELECT * FROM news WHERE "Code" = '{}' ORDER BY "Date" DESC;""".format(code), ttl=0)
+    news_df["Date"] = news_df["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
     return news_df.values
 
 @st.cache_data
@@ -43,7 +43,7 @@ def get_stock(code=None, period="10y", interval="1d"):
     else :
         stock_tick = yf.Ticker(code.upper()+".JK", session=session)
     
-    predicted_days = get_forecast_date()
+    predicted_days = get_forecast_date(code)
     
     # Minute and hour timeframes data aren't saved in database.
     if interval[1:] == "m" or interval[1:] == "h" :
@@ -147,3 +147,15 @@ def is_updated(code) :
         return True
     else :
         return False
+        
+def get_forecast_date(code) :
+    latest_date_from_db = get_maximum_date(code)
+    dates = []
+    i = 0
+    while len(dates) < 10 :
+        if (latest_date_from_db + timedelta(days=1*i)).strftime("%A") not in ['Sunday', 'Saturday'] :
+            dates.append((latest_date_from_db + timedelta(days=1*i)).strftime("%Y-%m-%d"))
+            i += 1
+        else :
+            latest_date_from_db = latest_date_from_db + timedelta(days=1)
+    return dates
