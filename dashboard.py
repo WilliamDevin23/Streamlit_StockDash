@@ -410,7 +410,7 @@ def main() :
         if is_updated(st.session_state.code.lower()) :
             st.cache_data.clear()
         
-        time.sleep(60)
+        time.sleep(30)
 
 if __name__ == "__main__":
     main()
