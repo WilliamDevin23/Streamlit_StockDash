@@ -19,8 +19,8 @@ def update_volume(cursor, code) :
     data = yf.Ticker(code).history("1d", "1d")
     data.index = data.index.strftime("%Y-%m-%d")
     
-    yesterday_date = two_days_data.index.values[0]
-    yesterday_volume = two_days_data["Volume"].values[0]
+    yesterday_date = data.index.values[0]
+    yesterday_volume = data["Volume"].values[0]
     
     cur.execute("""UPDATE {} SET "Volume" = {} WHERE "Date" = '{}';""".format(db_name, yesterday_volume, yesterday_date))
 
