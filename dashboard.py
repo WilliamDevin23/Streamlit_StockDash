@@ -9,6 +9,7 @@ from inference.prediction import *
 from inference.fine_tuning import *
 import time
 import yfinance as yf
+import re
 
 # Plotly ModeBar Buttons, Streamlit Metric and Heading Positioning
 st.markdown("""<style>
@@ -47,8 +48,28 @@ def main() :
             st.session_state.code = st.session_state.new_code[:4]
             st.session_state.horizontals = []
     
+    # Title
+    st.markdown("<h1 style='text-align: center'>LQ45 Dashboard</h1>", unsafe_allow_html=True)
+    
+    # Code SelectBox
+    option = st.selectbox("Stock Codes",
+                          get_codes(), key="new_code",
+                          on_change=new_code)
+    
+    # Selected Company's Name
+    name = option[5:]
+    
+    # Defining Three Tabs
+    dashboard, prediction, news, download = st.tabs(["Dashboard", "Predict", "News", "Download"])
+    
+    #Toggle Button to Activate/Deactivate Auto Update
+    realtime = st.toggle("Auto Update", value=True)
+    
+    # Placeholder for the Candlestick Chart and the Price Metric
+    placeholder = st.empty()
+    
     # Function to Update Metric and the Candlestick Chart
-    def update_data(placeholder, ma_arr: list, colors: dict, h_lines: list, stochastic: list) :
+    def update_data(ma_arr: list, colors: dict, h_lines: list, stochastic: list) :
         
         # Global variables for further use outside the function
         global stock_data, stock_metric, datebreaks, fig
@@ -99,26 +120,13 @@ def main() :
             # Display the plot.
             st.plotly_chart(fig, use_container_width=True)
     
-    # Title
-    st.markdown("<h1 style='text-align: center'>LQ45 Dashboard</h1>", unsafe_allow_html=True)
-    
-    # Code SelectBox
-    option = st.selectbox("Stock Codes",
-                          get_codes(), key="new_code",
-                          on_change=new_code)
-    
-    # Selected Company's Name
-    name = option[5:]
-    
-    # Defining Three Tabs
-    dashboard, prediction, news, download = st.tabs(["Dashboard", "Predict", "News", "Download"])
-    
     # Sidebar
     with st.sidebar :
         # Dictionary that maps interval abbreviation.
         time_dict = {"5m":"5 Minutes", "1h":"1 Hour",
                     "1d":"1 Day", "1wk":"1 Week",
-                    "1mo":"1 Month", "1y":"1 Year", "1mo":"1 Month",
+                    "1mo":"1 Month", "3mo":"3 Months",
+                    "6mo":"6 Months", "1y":"1 Year",
                     "3y":"3 Years", "5y":"5 Years"}
         
         # Return the corresponding choice based on the time_dict. Triggered since the selectboxes are rendered.
@@ -134,11 +142,15 @@ def main() :
                 st.session_state.interval_filter = "5m"
             else:
                 st.session_state.interval_filter = "1d"
+            
+            placeholder.empty()
         
         # Updating interval session states. Triggered when the selected interval in the selectbox is changed.
         def update_interval():
             if st.session_state.new_interval != st.session_state.interval_filter:
                 st.session_state.interval_filter = st.session_state.new_interval
+            
+            placeholder.empty()
         
         # Updating chart type session states. Triggered when the selected chart type in the selectbox is changed.
         def update_chart_type():
@@ -155,17 +167,22 @@ def main() :
                     key="update_chart_type", on_change=update_chart_type)
         
         # Period selectbox.
-        st.selectbox("Period", ["1d", "1mo", "1y", "3y", "5y"], format_func=format_func,
+        st.selectbox("Period", ["1d", "1mo", "3mo", "6mo", "1y", "3y", "5y"], format_func=format_func,
                     key="new_period", on_change=update_period)
         
         # List that stores intervals abbreviation.
-        intervals = ["5m", "1h", "1d", "1wk", "1mo"]
+        intervals = ["5m", "1h", "1d", "1wk", "1mo", "3mo"]
         
         # Handling the supported intervals based on the period.
-        if st.session_state.period_filter == "1d" :
+        amount, period = re.findall(r'\d+|\D+', st.session_state.period_filter)
+        amount = int(amount)
+        if period == "d" :
             intervals = intervals[:2]
-        elif st.session_state.period_filter == "1mo" :
-            intervals = intervals[2:-1]
+        elif period == "mo" :
+            if amount == 3 :
+                intervals = intervals[2:-1]
+            else :
+                intervals = intervals[2:-2]
         else :
             intervals = intervals[2:]
             
@@ -312,12 +329,6 @@ def main() :
     # First Tab : Dashboard
     with dashboard :
         
-        #Toggle Button to Activate/Deactivate Auto Update
-        realtime = st.toggle("Auto Update", value=True)
-        
-        # Placeholder for the Candlestick Chart and the Price Metric
-        placeholder = st.empty()
-        
         # Timer Section (for minutes and hour timeframe only)
         date, day, hour, minute = get_today()
         market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" and day != "Sunday")
@@ -336,7 +347,7 @@ def main() :
                 st.empty()
         
         # Run update_data() for the first time.
-        update_data(placeholder, st.session_state.moving_avgs,
+        update_data(st.session_state.moving_avgs,
                     st.session_state.colors, st.session_state.horizontals,
                     st.session_state.stochastic)
     
@@ -401,7 +412,7 @@ def main() :
     while (hour >= 9 and hour <= 16) and realtime and not (day == "Saturday" or day == "Sunday") :
         _, day, hour, minute = get_today()
         with dashboard :
-            update_data(placeholder, st.session_state.moving_avgs,
+            update_data(st.session_state.moving_avgs,
                         st.session_state.colors, st.session_state.horizontals,
                         st.session_state.stochastic)
         with download :
