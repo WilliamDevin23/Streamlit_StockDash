@@ -72,12 +72,12 @@ def main() :
         placeholder = st.empty()
     
     # Function to Update Metric and the Candlestick Chart
-    def update_data(ma_arr: list, colors: dict, h_lines: list, stochastic: list) :
-        
-        # Global variables for further use outside the function
-        global stock_data, stock_metric, datebreaks, fig
-        
-        with dashboard :
+        def update_data(ma_arr: list, colors: dict, h_lines: list, stochastic: list) :
+            
+            # Global variables for further use outside the function
+            global stock_data, stock_metric, datebreaks, fig
+            
+            placeholder.empty()
             # Inside the Placeholder
             with placeholder.container() :
                     
@@ -126,9 +126,9 @@ def main() :
                 # Display the plot.
                 st.plotly_chart(fig, use_container_width=True)
     
-    update_data(st.session_state.moving_avgs,
-                st.session_state.colors, st.session_state.horizontals,
-                st.session_state.stochastic)
+        update_data(st.session_state.moving_avgs,
+                    st.session_state.colors, st.session_state.horizontals,
+                    st.session_state.stochastic)
     
     # Sidebar
     with st.sidebar :
@@ -384,10 +384,10 @@ def main() :
     while (hour >= 9 and hour <= 16) and realtime and not (day == "Saturday" or day == "Sunday") :
         date, day, hour, minute = get_today()
         
-        placeholder.empty()
-        update_data(st.session_state.moving_avgs,
-                    st.session_state.colors, st.session_state.horizontals,
-                    st.session_state.stochastic)
+        with dashboard :
+            update_data(st.session_state.moving_avgs,
+                        st.session_state.colors, st.session_state.horizontals,
+                        st.session_state.stochastic)
                     
         with download :
             update_table()

@@ -26,11 +26,7 @@ def line_coloring(data):
         return "green"
 
 def make_graph(data, datebreaks, interval, chart_type, ma_arr, colors, stochastic_param, size=3):
-    if interval[1:] == "m":
-        dval = int(interval[0])
-    elif interval[1:] == "h":
-        dval = int(interval[0])*60
-    elif interval[1:] == "d":
+    if interval[1:] == "d":
         dval = int(interval[0])*60*24
     elif interval[1:] == "wk":
         dval = int(interval[0])*60*24*7
