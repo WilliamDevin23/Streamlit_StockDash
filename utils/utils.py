@@ -2,8 +2,6 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
 import streamlit as st
-import pytz
-from datetime import datetime
 import time
 from inference.data_processing import stochastic
 
@@ -92,14 +90,3 @@ def add_ma(data, window_size) :
         for w in window_size :
             data["MA "+str(w)] = data["Close"].rolling(window=w).mean()
     return data
-
-def timer(placeholder) :
-    jkt_tz = pytz.timezone('Asia/Jakarta')
-    with placeholder :
-        jkt_now = datetime.now(jkt_tz)
-        open_time = datetime(jkt_now.year, jkt_now.month, jkt_now.day, 9, 15, 0)
-        jkt_now = jkt_now.replace(tzinfo=None)
-        diff = open_time - jkt_now
-        minutes_diff = divmod(diff.seconds, 60)
-        st.header("Market will be opened in 00:{:02d}:{:02d}".format(minutes_diff[0], minutes_diff[1]))
-        time.sleep(1)

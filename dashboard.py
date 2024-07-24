@@ -31,8 +31,8 @@ def main() :
     
     #Session states
     if "chart_type" not in st.session_state : st.session_state.chart_type = "Candlestick"
-    if "period_filter" not in st.session_state : st.session_state.period_filter = "1d"
-    if "interval_filter" not in st.session_state : st.session_state.interval_filter = "5m"
+    if "period_filter" not in st.session_state : st.session_state.period_filter = "1mo"
+    if "interval_filter" not in st.session_state : st.session_state.interval_filter = "1d"
     if "code" not in st.session_state : st.session_state.code = "IHSG"
     if "moving_avgs" not in st.session_state : st.session_state.moving_avgs = []
     if "stochastic" not in st.session_state : st.session_state.stochastic = []
@@ -63,7 +63,7 @@ def main() :
     # Defining Three Tabs
     dashboard, prediction, news, download = st.tabs(["Dashboard", "Predict",
                                                      "News", "Download"])
-    
+    # Dashboard tab
     with dashboard :
         #Toggle Button to Activate/Deactivate Auto Update
         realtime = st.toggle("Auto Update", value=True)
@@ -133,8 +133,7 @@ def main() :
     # Sidebar
     with st.sidebar :
         # Dictionary that maps interval abbreviation.
-        time_dict = {"5m":"5 Minutes", "1h":"1 Hour",
-                    "1d":"1 Day", "1wk":"1 Week",
+        time_dict = {"1d":"1 Day", "1wk":"1 Week",
                     "1mo":"1 Month", "3mo":"3 Months",
                     "6mo":"6 Months", "1y":"1 Year",
                     "3y":"3 Years", "5y":"5 Years"}
@@ -147,18 +146,12 @@ def main() :
         def update_period():
             if st.session_state.new_period != st.session_state.period_filter:
                 st.session_state.period_filter = st.session_state.new_period
-            
-            if st.session_state.period_filter == "1d":
-                st.session_state.interval_filter = "5m"
-            else:
                 st.session_state.interval_filter = "1d"
-            placeholder.empty()
         
         # Updating interval session states. Triggered when the selected interval in the selectbox is changed.
         def update_interval():
             if st.session_state.new_interval != st.session_state.interval_filter:
                 st.session_state.interval_filter = st.session_state.new_interval
-            placeholder.empty()
         
         # Updating chart type session states. Triggered when the selected chart type in the selectbox is changed.
         def update_chart_type():
@@ -175,24 +168,18 @@ def main() :
                      key="update_chart_type", on_change=update_chart_type)
         
         # Period selectbox.
-        st.selectbox("Period", ["1d", "1mo", "3mo", "6mo", "1y", "3y", "5y"], format_func=format_func,
+        st.selectbox("Period", ["1mo", "3mo", "6mo", "1y", "3y", "5y"], format_func=format_func,
                      key="new_period", on_change=update_period)
         
         # List that stores intervals abbreviation.
-        intervals = ["5m", "1h", "1d", "1wk", "1mo"]
+        intervals = ["1d", "1wk", "1mo"]
         
         # Handling the supported intervals based on the period.
         amount, period = re.findall(r'\d+|\D+', st.session_state.period_filter)
         amount = int(amount)
-        if period == "d" :
-            intervals = intervals[:2]
-        elif period == "mo" :
-            if amount > 3 :
-                intervals = intervals[2:]
-            else :
-                intervals = intervals[2:-1]
-        else :
-            intervals = intervals[2:]
+        if period == "mo" :
+            if amount < 3 :
+                intervals = intervals[:2]
             
         # Interval selectbox.
         st.selectbox("Interval", intervals, format_func=format_func,
@@ -367,6 +354,7 @@ def main() :
                            file_name="{}_{}.csv".format(st.session_state.code, date),
                            mime="text/csv")
     
+    # Prediction tab
     with prediction :
         with st.expander("Attention...") :
             st.markdown("Train the model will take around 1-2 minutes.\
@@ -391,25 +379,6 @@ def main() :
             
             prediction_df = show_prediction_table(st.session_state.code, forecast)
             st.dataframe(prediction_df, use_container_width=True)
-    
-    # Dashboard tab
-    with dashboard :
-        # Timer Section (for minutes and hour timeframe only)
-        date, day, hour, minute = get_today()
-        market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" and day != "Sunday")
-        lower_than_daily = st.session_state.interval_filter == "5m" or st.session_state.interval_filter == "1h"
-        while market_close and lower_than_daily :
-            date, day, hour, minute = get_today()
-            timer(placeholder)
-            market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" and day != "Sunday")
-            
-            # Emptying the other tabs
-            with news :
-                st.empty()
-            with download :
-                st.empty()
-            with prediction :
-                st.empty()
     
     # If it's not weekend and the hour is within the active market time. Use UTC+7 timezone.
     while (hour >= 9 and hour <= 16) and realtime and not (day == "Saturday" or day == "Sunday") :

@@ -45,49 +45,33 @@ def get_stock(code=None, period="10y", interval="1d"):
     
     predicted_days = get_forecast_date(code)
     
-    # Minute and hour timeframes data aren't saved in database.
-    if interval[1:] == "m" or interval[1:] == "h" :
-        stock_data = stock_tick.history(period=period, interval=interval, prepost=True)
-        stock_data.index = stock_data.index.strftime("%Y-%m-%d %H:%M:%S")
-        
-        if interval[1:] == "m":
-            dt_all = pd.date_range(start=stock_data.index.tolist()[0],
-                                   end=stock_data.index.tolist()[-1], freq="5min")
-        else :
-            dt_all = pd.date_range(start=stock_data.index.tolist()[0],
-                                   end=stock_data.index.tolist()[-1], freq="h")
-        
-        dt_all_str = [d.strftime("%Y-%m-%d %H:%M:%S") for d in dt_all.tolist()]
+    updated_status = is_updated(code)
+    first_date = get_first_date(code, period, interval)
+    stock_data = get_stock_from_db(code, first_date)
     
+    if not updated_status :
+        today_data = stock_tick.history(period="1d", interval="1d", prepost=True)
+        today_data.reset_index(inplace=True)
+        stock_data = pd.concat([stock_data, today_data], axis=0)
     
+    stock_data["Date"] = stock_data["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
+    stock_data.set_index("Date", inplace=True)
+    
+    if interval[1:] == "d":
+        dt_all = pd.date_range(start=stock_data.index.tolist()[0],
+                               end=predicted_days[-1], freq="D")
+        dt_all_str = [d.strftime("%Y-%m-%d") for d in dt_all.tolist()]
     else :
-        updated_status = is_updated(code)
-        first_date = get_first_date(code, period, interval)
-        stock_data = get_stock_from_db(code, first_date)
-        
-        if not updated_status :
-            today_data = stock_tick.history(period="1d", interval="1d", prepost=True)
-            today_data.reset_index(inplace=True)
-            stock_data = pd.concat([stock_data, today_data], axis=0)
-        
-        stock_data["Date"] = stock_data["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
-        stock_data.set_index("Date", inplace=True)
-        
-        if interval[1:] == "d":
+        stock_data = resample(stock_data, interval)
+        if interval[1:] == "wk":
             dt_all = pd.date_range(start=stock_data.index.tolist()[0],
-                                   end=predicted_days[-1], freq="D")
+                                   end=stock_data.index.tolist()[-1], freq="7D")
             dt_all_str = [d.strftime("%Y-%m-%d") for d in dt_all.tolist()]
+            
         else :
-            stock_data = resample(stock_data, interval)
-            if interval[1:] == "wk":
-                dt_all = pd.date_range(start=stock_data.index.tolist()[0],
-                                       end=stock_data.index.tolist()[-1], freq="7D")
-                dt_all_str = [d.strftime("%Y-%m-%d") for d in dt_all.tolist()]
-                
-            else :
-                dt_all = pd.date_range(start=stock_data.index.tolist()[0],
-                                       end=stock_data.index.tolist()[-1], freq="ME")
-                dt_all_str = [d.strftime("%Y-%m") for d in dt_all.tolist()]
+            dt_all = pd.date_range(start=stock_data.index.tolist()[0],
+                                   end=stock_data.index.tolist()[-1], freq="ME")
+            dt_all_str = [d.strftime("%Y-%m") for d in dt_all.tolist()]
         
     dt_breaks = [d for d in dt_all_str if not d in stock_data.index.tolist() and not d in predicted_days]
     return stock_data, dt_breaks
