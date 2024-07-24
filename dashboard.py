@@ -71,12 +71,13 @@ def main() :
         # Placeholder for the Candlestick Chart and the Price Metric
         placeholder = st.empty()
     
-        # Function to Update Metric and the Candlestick Chart
-        def update_data(ma_arr: list, colors: dict, h_lines: list, stochastic: list) :
-            
-            # Global variables for further use outside the function
-            global stock_data, stock_metric, datebreaks, fig
-            
+    # Function to Update Metric and the Candlestick Chart
+    def update_data(ma_arr: list, colors: dict, h_lines: list, stochastic: list) :
+        
+        # Global variables for further use outside the function
+        global stock_data, stock_metric, datebreaks, fig
+        
+        with dashboard :
             # Inside the Placeholder
             with placeholder.container() :
                     
@@ -125,6 +126,10 @@ def main() :
                 # Display the plot.
                 st.plotly_chart(fig, use_container_width=True)
     
+    update_data(st.session_state.moving_avgs,
+                st.session_state.colors, st.session_state.horizontals,
+                st.session_state.stochastic)
+    
     # Sidebar
     with st.sidebar :
         # Dictionary that maps interval abbreviation.
@@ -147,11 +152,13 @@ def main() :
                 st.session_state.interval_filter = "5m"
             else:
                 st.session_state.interval_filter = "1d"
+            placeholder.empty()
         
         # Updating interval session states. Triggered when the selected interval in the selectbox is changed.
         def update_interval():
             if st.session_state.new_interval != st.session_state.interval_filter:
                 st.session_state.interval_filter = st.session_state.new_interval
+            placeholder.empty()
         
         # Updating chart type session states. Triggered when the selected chart type in the selectbox is changed.
         def update_chart_type():
@@ -327,30 +334,6 @@ def main() :
                                     disabled = len(st.session_state.stochastic) == 0,
                                     on_click=clear_stochastic)
     
-    # First Tab : Dashboard
-    with dashboard :
-        # Timer Section (for minutes and hour timeframe only)
-        date, day, hour, minute = get_today()
-        market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" and day != "Sunday")
-        lower_than_daily = st.session_state.interval_filter == "5m" or st.session_state.interval_filter == "1h"
-        while market_close and lower_than_daily :
-            date, day, hour, minute = get_today()
-            timer(placeholder)
-            market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" and day != "Sunday")
-            
-            # Emptying the other tabs
-            with news :
-                st.empty()
-            with download :
-                st.empty()
-            with prediction :
-                st.empty()
-        
-        # Run update_data() for the first time.
-        update_data(st.session_state.moving_avgs,
-                    st.session_state.colors, st.session_state.horizontals,
-                    st.session_state.stochastic)
-    
     # News tab. Displaying the news based on the selected stock code.
     with news :
         news_arr = get_news(st.session_state.code)
@@ -407,15 +390,35 @@ def main() :
             
             prediction_df = show_prediction_table(st.session_state.code, forecast)
             st.dataframe(prediction_df, use_container_width=True)
-        
+    
+    # Dashboard tab
+    with dashboard :
+        # Timer Section (for minutes and hour timeframe only)
+        date, day, hour, minute = get_today()
+        market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" and day != "Sunday")
+        lower_than_daily = st.session_state.interval_filter == "5m" or st.session_state.interval_filter == "1h"
+        while market_close and lower_than_daily :
+            date, day, hour, minute = get_today()
+            timer(placeholder)
+            market_close = ((8 <= hour < 9) or (minute < 15 and hour == 9)) and (day != "Saturday" and day != "Sunday")
+            
+            # Emptying the other tabs
+            with news :
+                st.empty()
+            with download :
+                st.empty()
+            with prediction :
+                st.empty()
+    
     # If it's not weekend and the hour is within the active market time. Use UTC+7 timezone.
     while (hour >= 9 and hour <= 16) and realtime and not (day == "Saturday" or day == "Sunday") :
         date, day, hour, minute = get_today()
         
-        with dashboard :
-            update_data(st.session_state.moving_avgs,
-                        st.session_state.colors, st.session_state.horizontals,
-                        st.session_state.stochastic)
+        placeholder.empty()
+        update_data(st.session_state.moving_avgs,
+                    st.session_state.colors, st.session_state.horizontals,
+                    st.session_state.stochastic)
+                    
         with download :
             update_table()
         
