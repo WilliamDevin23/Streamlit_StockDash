@@ -151,6 +151,7 @@ def main() :
             
             with placeholder.container() :
                 st.empty()
+            time.sleep(5)
         
         # Updating interval session states. Triggered when the selected interval in the selectbox is changed.
         def update_interval():
@@ -158,6 +159,7 @@ def main() :
                 st.session_state.interval_filter = st.session_state.new_interval
             with placeholder.container() :
                 st.empty()
+            time.sleep(5)
         
         # Updating chart type session states. Triggered when the selected chart type in the selectbox is changed.
         def update_chart_type():
