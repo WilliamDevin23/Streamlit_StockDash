@@ -42,7 +42,6 @@ def main() :
                                                                      "stoch_color": []}
     if "ma_disable" not in st.session_state : st.session_state.ma_disable = True
     if "h_disable" not in st.session_state : st.session_state.h_disable = True
-    if "realtime" not in st.session_state : st.session_state.realtime = True
     
     # Function to handle code choice
     def new_code():
@@ -72,59 +71,59 @@ def main() :
         # Placeholder for the Candlestick Chart and the Price Metric
         placeholder = st.empty()
     
-    # Function to Update Metric and the Candlestick Chart
-    def update_data(ma_arr: list, colors: dict, h_lines: list, stochastic: list) :
-        
-        # Global variables for further use outside the function
-        global stock_data, stock_metric, datebreaks, fig
-        
-        # Inside the Placeholder
-        with placeholder.container() :
-                
-            # Make 2 columns : first for code name, second for the metric
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown(f"<h3>{st.session_state.code}</h3>", unsafe_allow_html=True)
-                st.write(name)
+        # Function to Update Metric and the Candlestick Chart
+        def update_data(ma_arr: list, colors: dict, h_lines: list, stochastic: list) :
             
-            stock_data, datebreaks = get_stock(code=st.session_state.code.lower(),
-                                               period=st.session_state.period_filter,
-                                               interval=st.session_state.interval_filter)
-                
-            # Get the closed price metric
-            stock_metric = get_metric(stock_data)
+            # Global variables for further use outside the function
+            global stock_data, stock_metric, datebreaks, fig
             
-            # Show the metric in column 2
-            col2.metric(label="Close Price",
-                        value="Rp {0}".format(stock_metric['Close']),
-                        delta="{0} ({1} %)".format(stock_metric['Diff'],
-                                                   stock_metric['Percent']))
-            
-            # Make the candlestick chart
-            fig = make_graph(stock_data, datebreaks,
-                             st.session_state.interval_filter,
-                             st.session_state.chart_type,
-                             ma_arr, colors, stochastic)
+            # Inside the Placeholder
+            with placeholder.container() :
+                    
+                # Make 2 columns : first for code name, second for the metric
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown(f"<h3>{st.session_state.code}</h3>", unsafe_allow_html=True)
+                    st.write(name)
                 
-            # Draw horizontal lines on the chart if the list isn't empty.
-            if len(h_lines) > 0 :
-                for h, h_color in zip(h_lines, colors["h_color"]) :
-                    fig.add_hline(h, line_color=h_color,
-                                  annotation_text=h,
-                                  annotation_position='bottom right',
-                                  annotation_font_color=h_color, row=1, col=1)
+                stock_data, datebreaks = get_stock(code=st.session_state.code.lower(),
+                                                   period=st.session_state.period_filter,
+                                                   interval=st.session_state.interval_filter)
+                    
+                # Get the closed price metric
+                stock_metric = get_metric(stock_data)
                 
-            # List that stores hoverinfo background colors corresponding to each data.
-            hover_bg_color = ["green" if close >= open_\
-                else "red" for open_, close in zip(stock_data["Open"].values,
-                                                   stock_data["Close"].values)]
+                # Show the metric in column 2
+                col2.metric(label="Close Price",
+                            value="Rp {0}".format(stock_metric['Close']),
+                            delta="{0} ({1} %)".format(stock_metric['Diff'],
+                                                       stock_metric['Percent']))
                 
-            # Handle candlestick hoverinfo background color.
-            fig.update_traces(hoverlabel=dict(bgcolor=hover_bg_color),
-                              selector=dict(type="candlestick"))
-                
-            # Display the plot.
-            st.plotly_chart(fig, use_container_width=True)
+                # Make the candlestick chart
+                fig = make_graph(stock_data, datebreaks,
+                                 st.session_state.interval_filter,
+                                 st.session_state.chart_type,
+                                 ma_arr, colors, stochastic)
+                    
+                # Draw horizontal lines on the chart if the list isn't empty.
+                if len(h_lines) > 0 :
+                    for h, h_color in zip(h_lines, colors["h_color"]) :
+                        fig.add_hline(h, line_color=h_color,
+                                      annotation_text=h,
+                                      annotation_position='bottom right',
+                                      annotation_font_color=h_color, row=1, col=1)
+                    
+                # List that stores hoverinfo background colors corresponding to each data.
+                hover_bg_color = ["green" if close >= open_\
+                    else "red" for open_, close in zip(stock_data["Open"].values,
+                                                       stock_data["Close"].values)]
+                    
+                # Handle candlestick hoverinfo background color.
+                fig.update_traces(hoverlabel=dict(bgcolor=hover_bg_color),
+                                  selector=dict(type="candlestick"))
+                    
+                # Display the plot.
+                st.plotly_chart(fig, use_container_width=True)
     
     # Sidebar
     with st.sidebar :
@@ -136,7 +135,7 @@ def main() :
                     "3y":"3 Years", "5y":"5 Years"}
         
         # Return the corresponding choice based on the time_dict. Triggered since the selectboxes are rendered.
-        def format_func(choice: str) -> str:
+        def format_func(choice) :
             return time_dict[choice]
         
         # Updating period session states. Triggered when the selected period in the selectbox is changed.
@@ -148,18 +147,11 @@ def main() :
                 st.session_state.interval_filter = "5m"
             else:
                 st.session_state.interval_filter = "1d"
-            
-            with placeholder.container() :
-                st.empty()
-            time.sleep(5)
         
         # Updating interval session states. Triggered when the selected interval in the selectbox is changed.
         def update_interval():
             if st.session_state.new_interval != st.session_state.interval_filter:
                 st.session_state.interval_filter = st.session_state.new_interval
-            with placeholder.container() :
-                st.empty()
-            time.sleep(5)
         
         # Updating chart type session states. Triggered when the selected chart type in the selectbox is changed.
         def update_chart_type():
