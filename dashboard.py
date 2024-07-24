@@ -172,14 +172,14 @@ def main() :
         
         # Chart type selectbox.
         st.selectbox("Chart Type", ["Candlestick", "Line"],
-                    key="update_chart_type", on_change=update_chart_type)
+                     key="update_chart_type", on_change=update_chart_type)
         
         # Period selectbox.
         st.selectbox("Period", ["1d", "1mo", "3mo", "6mo", "1y", "3y", "5y"], format_func=format_func,
-                    key="new_period", on_change=update_period)
+                     key="new_period", on_change=update_period)
         
         # List that stores intervals abbreviation.
-        intervals = ["5m", "1h", "1d", "1wk", "1mo", "3mo"]
+        intervals = ["5m", "1h", "1d", "1wk", "1mo"]
         
         # Handling the supported intervals based on the period.
         amount, period = re.findall(r'\d+|\D+', st.session_state.period_filter)
@@ -187,16 +187,17 @@ def main() :
         if period == "d" :
             intervals = intervals[:2]
         elif period == "mo" :
-            if amount == 3 :
-                intervals = intervals[2:-1]
+            if amount > 3 :
+                intervals = intervals[2:]
             else :
-                intervals = intervals[2:-2]
+                intervals = intervals[2:-1]
         else :
             intervals = intervals[2:]
             
         # Interval selectbox.
         st.selectbox("Interval", intervals, format_func=format_func,
-                    key="new_interval", on_change=update_interval)
+                     index = intervals.index(st.session_state.interval_filter),
+                     key="new_interval", on_change=update_interval)
         
         # Streamlit's Horizontal line as a divider.
         st.divider()
