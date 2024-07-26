@@ -29,7 +29,7 @@ def get_news(code) :
     news_df["Date"] = news_df["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
     return news_df.values
 
-@st.cache_data
+@st.cache_data(ttl=3600)
 def get_stock_from_db(code, first_date):
     stock_data = conn.query("""SELECT * FROM {} WHERE "Date" >= '{}';""".format(code[:4], first_date))
     return stock_data    
@@ -45,13 +45,11 @@ def get_stock(code=None, period="10y", interval="1d"):
     
     predicted_days = get_forecast_date(code)
     
-    updated_status = is_updated(code)
+    updated_status, today_data = is_updated(code)
     first_date = get_first_date(code, period, interval)
     stock_data = get_stock_from_db(code, first_date)
     
     if not updated_status :
-        today_data = stock_tick.history(period="1d", interval="1d", prepost=True)
-        today_data.reset_index(inplace=True)
         stock_data = pd.concat([stock_data, today_data], axis=0)
     
     stock_data["Date"] = stock_data["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
@@ -110,6 +108,7 @@ def get_today() :
     
     return jkt_date, jkt_day, jkt_hour, jkt_minute
 
+@st.cache_data(ttl=3600)
 def get_maximum_date(code) :
     max_date = conn.query("""SELECT MAX("Date") FROM {};""".format(code))["max"].values.tolist()[0]
     max_date = max_date.strftime("%Y-%m-%d")
@@ -123,14 +122,14 @@ def is_updated(code) :
         tick = "^JKLQ45"
     else :
         tick = code.upper() + ".JK"
-    today_data = yf.Ticker(tick).history("1d", "1d").reset_index()
+    today_data = yf.Ticker(tick).history("1d", "1d", prepost=True).reset_index()
     today_data["Date"] = today_data["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
     latest_date_from_yf = today_data["Date"].values[-1]
     latest_date_from_db = get_maximum_date(code).strftime("%Y-%m-%d")
     if latest_date_from_db == latest_date_from_yf :
-        return True
+        return True, None
     else :
-        return False
+        return False, today_data
         
 def get_forecast_date(code) :
     latest_date_from_db = get_maximum_date(code)

@@ -24,24 +24,24 @@ st.markdown("""<style>
                 }
             </style>""", unsafe_allow_html=True)
 
+#Session states
+if "chart_type" not in st.session_state : st.session_state.chart_type = "Candlestick"
+if "period_filter" not in st.session_state : st.session_state.period_filter = "1mo"
+if "interval_filter" not in st.session_state : st.session_state.interval_filter = "1d"
+if "code" not in st.session_state : st.session_state.code = "IHSG"
+if "moving_avgs" not in st.session_state : st.session_state.moving_avgs = []
+if "stochastic" not in st.session_state : st.session_state.stochastic = []
+if "horizontals" not in st.session_state : st.session_state.horizontals = []
+if "colors" not in st.session_state : st.session_state.colors = {"ma_color": [],
+                                                                 "h_color":[],
+                                                                 "stoch_color": []}
+if "ma_disable" not in st.session_state : st.session_state.ma_disable = True
+if "h_disable" not in st.session_state : st.session_state.h_disable = True
+
 # Main Application
 def main() :
     
     global date, day, hour, minute
-    
-    #Session states
-    if "chart_type" not in st.session_state : st.session_state.chart_type = "Candlestick"
-    if "period_filter" not in st.session_state : st.session_state.period_filter = "1mo"
-    if "interval_filter" not in st.session_state : st.session_state.interval_filter = "1d"
-    if "code" not in st.session_state : st.session_state.code = "IHSG"
-    if "moving_avgs" not in st.session_state : st.session_state.moving_avgs = []
-    if "stochastic" not in st.session_state : st.session_state.stochastic = []
-    if "horizontals" not in st.session_state : st.session_state.horizontals = []
-    if "colors" not in st.session_state : st.session_state.colors = {"ma_color": [],
-                                                                     "h_color":[],
-                                                                     "stoch_color": []}
-    if "ma_disable" not in st.session_state : st.session_state.ma_disable = True
-    if "h_disable" not in st.session_state : st.session_state.h_disable = True
     
     # Function to handle code choice
     def new_code():
@@ -66,7 +66,7 @@ def main() :
     # Dashboard tab
     with dashboard :
         #Toggle Button to Activate/Deactivate Auto Update
-        realtime = st.toggle("Auto Update", value=True)
+        realtime = st.toggle("Auto Update", value=False)
         
         # Placeholder for the Candlestick Chart and the Price Metric
         placeholder = st.empty()
@@ -219,6 +219,10 @@ def main() :
                     
                     # Set the "Clear MA" disabled to False.
                     st.session_state.ma_disable = False
+                    
+                    update_data(st.session_state.moving_avgs,
+                                st.session_state.colors, st.session_state.horizontals,
+                                st.session_state.stochastic)
         
             # Clear Moving Average(s). Triggered when the Clear MA button is clicked.
             def clear_ma() :
@@ -255,6 +259,10 @@ def main() :
                     
                     # Set the "Clear Lines" disabled to False.
                     st.session_state.h_disable = False
+                    
+                    update_data(st.session_state.moving_avgs,
+                                st.session_state.colors, st.session_state.horizontals,
+                                st.session_state.stochastic)
             
             # Clear Horizontal Line(s). Triggered when the Clear Lines button is clicked.
             def clear_horizontals() :
@@ -359,8 +367,8 @@ def main() :
         with st.expander("Attention...") :
             st.markdown("Train the model will take around 1-2 minutes.\
             While waiting, you could take a cup of coffee\
-            :coffee: :smile:\nThe prediction is expected to deviate\
-            for around 2% - 5% from the real price.\nPlease be\
+            :coffee: :smile:  \nThe prediction is expected to deviate\
+            for around 2% - 5% from the real price.  \nPlease be\
             aware that the model is experimental, and the prediction\
             should not fully be taken as investment advice.")
         
@@ -371,7 +379,7 @@ def main() :
             
             # Retrain the model and forecast the next 10 days prices.
             model = get_model()
-            forecast = fine_tuning(model, daily_data)
+            forecast = fine_tuning(st.session_state.code, model, daily_data)
             
             predict_fig = show_prediction_chart(st.session_state.code, daily_data.iloc[-100:],
                                                 forecast, datebreaks)
@@ -391,9 +399,6 @@ def main() :
                     
         with download :
             update_table()
-        
-        if is_updated(st.session_state.code.lower()) :
-            st.cache_data.clear()
         
         time.sleep(30)
 

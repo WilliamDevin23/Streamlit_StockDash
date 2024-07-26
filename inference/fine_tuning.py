@@ -21,31 +21,36 @@ def clone_model(model) :
 
 def compile_cloned_model(model) :
     model.compile(loss=tf.keras.losses.MeanAbsoluteError(),
-                  optimizer=tf.keras.optimizers.Adam(0.001))
+                  optimizer=tf.keras.optimizers.Adam(0.0005))
 
 @st.cache_data(ttl=3600)
-def fine_tuning(_model, daily_data) :
-    close_recent = daily_data["Close"].values[-1]
-    daily_data = prepare_data(daily_data)
-    base_model_prediction = predict(_model, daily_data)
-    diff = abs(base_model_prediction[0] - close_recent) / close_recent
-    if diff > 0.02 :
-        _cloned_model = clone_model(_model)
+def fine_tuning(code, _model0, _daily_data) :
+    
+    daily_data = prepare_data(_daily_data)
+    normalized_data = normalize_data(daily_data, daily_data.max(axis=0), daily_data.min(axis=0))
+    windowed_data = windowed_dataset(normalized_data,
+                                     100, 10, 64)
+    
+    result0 = _model0.evaluate(windowed_data)
+
+    if result0[0] > 0.02 :
+        _cloned_model = clone_model(_model0)
         callback = get_callback()
-        normalized_data = normalize_data(daily_data, daily_data.max(axis=0), daily_data.min(axis=0))
-        windowed_data = windowed_dataset(normalized_data[-111:, :],
-                                         100, 10, 1)
+
         compile_cloned_model(_cloned_model)
-        _cloned_model.fit(windowed_data, epochs=10,
+        _cloned_model.fit(windowed_data, epochs=2,
                           callbacks=[callback], verbose=1,
                           use_multiprocessing=True)
         
-        cloned_model_prediction = predict(_cloned_model, daily_data)
-    
-        cloned_diff = abs(cloned_model_prediction[0] - close_recent) / close_recent
-        if diff > cloned_diff :
-            return cloned_model_prediction
-    return base_model_prediction
+        result1 = _cloned_model.evaluate(windowed_data)
+        
+    if result0[0] > result1 :
+        cloned_model_prediction = predict(code, _cloned_model, daily_data)
+        return cloned_model_prediction
+        
+    else :
+        base_model_prediction = predict(code, _model0, daily_data)
+        return base_model_prediction
 
 @st.cache_data(ttl=3600)
 def show_prediction_chart(code, daily_data, forecast, datebreaks) :
