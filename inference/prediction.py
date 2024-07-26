@@ -21,11 +21,7 @@ def model_forecast(_model, data):
 @st.cache_data(ttl=3600)
 def predict(code, _model, data):
     scaled_data = normalize_data(data, data.max(axis=0), data.min(axis=0))
-    
-    if code == "ihsg" :
-        pred = model_forecast(_model, scaled_data[-101:-1, :])
-    else :
-        pred = model_forecast(_model, scaled_data[-100:, :])
+    pred = model_forecast(_model, scaled_data[-101:-1, :])
     pred = np.reshape(pred, (-1,))
     stock_pred = reverse_transform(pred, data[:, 0].max(), data[:, 0].min())
     return stock_pred

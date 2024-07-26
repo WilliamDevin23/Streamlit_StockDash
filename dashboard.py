@@ -365,11 +365,12 @@ def main() :
     # Prediction tab
     with prediction :
         with st.expander("Attention...") :
-            st.markdown("Train the model will take around 1-2 minutes.\
-            While waiting, you could take a cup of coffee\
-            :coffee: :smile:  \nThe prediction is expected to deviate\
-            for around 2% - 5% from the real price.  \nPlease be\
-            aware that the model is experimental, and the prediction\
+            st.markdown("Train the model will take around 1-2 minutes. \
+            Don't do anything while the model is training, or the training \
+            will be stopped, and you must start over again. \
+            \nThe prediction yields an average MAE of \
+            around 0.03 - 0.05 on 47 normalized stock codes price data.  \
+            \nPlease be aware that the model is experimental, and the prediction \
             should not fully be taken as investment advice.")
         
         if st.button("Predict Now!") :

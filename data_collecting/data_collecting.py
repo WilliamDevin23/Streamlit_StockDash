@@ -131,13 +131,14 @@ def is_updated(code) :
         return False, today_data
         
 def get_forecast_date(code) :
-    latest_date_from_db = get_maximum_date(code)
+    latest_date = get_maximum_date(code) + timedelta(days=1)
     dates = []
     i = 0
+    
     while len(dates) < 10 :
-        if (latest_date_from_db + timedelta(days=1*i)).strftime("%A") not in ['Sunday', 'Saturday'] :
-            dates.append((latest_date_from_db + timedelta(days=1*i)).strftime("%Y-%m-%d"))
+        if (latest_date + timedelta(days=1*i)).strftime("%A") not in ['Sunday', 'Saturday'] :
+            dates.append((latest_date + timedelta(days=1*i)).strftime("%Y-%m-%d"))
             i += 1
         else :
-            latest_date_from_db = latest_date_from_db + timedelta(days=1)
+            latest_date = latest_date + timedelta(days=1)
     return dates
