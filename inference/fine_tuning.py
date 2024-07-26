@@ -21,7 +21,7 @@ def clone_model(model) :
 
 def compile_cloned_model(model) :
     model.compile(loss=tf.keras.losses.MeanAbsoluteError(),
-                  optimizer=tf.keras.optimizers.Adam(0.0005))
+                  optimizer=tf.keras.optimizers.Adam(0.0001))
 
 @st.cache_data(ttl=3600)
 def fine_tuning(code, _model0, _daily_data) :
