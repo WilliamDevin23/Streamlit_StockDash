@@ -32,6 +32,7 @@ def get_news(code) :
 @st.cache_data(ttl=3600)
 def get_stock_from_db(code, first_date):
     stock_data = conn.query("""SELECT * FROM {} WHERE "Date" >= '{}';""".format(code[:4], first_date))
+    stock_data["Date"] = stock_data["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
     return stock_data    
 
 def get_stock(code=None, period="10y", interval="1d"):
@@ -51,8 +52,6 @@ def get_stock(code=None, period="10y", interval="1d"):
     
     if not updated_status :
         stock_data = pd.concat([stock_data, today_data], axis=0)
-    
-    stock_data["Date"] = stock_data["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
     stock_data.set_index("Date", inplace=True)
     
     if interval[1:] == "d":
