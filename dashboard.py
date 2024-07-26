@@ -319,6 +319,10 @@ def main() :
                     st.session_state.stochastic = [period, k, d]
                     
                     st.session_state.colors["stoch_color"] = [k_color, d_color]
+                    
+                    update_data(st.session_state.moving_avgs,
+                                st.session_state.colors, st.session_state.horizontals,
+                                st.session_state.stochastic)
             
             # Delete Stochastic plot. Triggered when the Delete button is clicked.
             def clear_stochastic() :
