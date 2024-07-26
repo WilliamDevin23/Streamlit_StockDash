@@ -44,9 +44,8 @@ def get_stock(code=None, period="10y", interval="1d"):
     else :
         stock_tick = yf.Ticker(code.upper()+".JK", session=session)
     
-    predicted_days = get_forecast_date(code)
-    
     updated_status, today_data = is_updated(code)
+    predicted_days = get_forecast_date(code, updated_status)
     first_date = get_first_date(code, period, interval)
     stock_data = get_stock_from_db(code, first_date)
     
@@ -80,10 +79,10 @@ def get_first_date(code, period, interval) :
     last_date = get_maximum_date(code)
     
     if period == "mo" :
-        first_date = last_date - pd.DateOffset(days=amount*30)
+        first_date = last_date - pd.DateOffset(months=amount)
         
     elif period == "y" :
-        first_date = last_date - pd.DateOffset(days=amount*365)
+        first_date = last_date - pd.DateOffset(years=amount)
     
     
     if interval[1:] == "wk" :
@@ -130,8 +129,12 @@ def is_updated(code) :
     else :
         return False, today_data
         
-def get_forecast_date(code) :
-    latest_date = get_maximum_date(code) + timedelta(days=1)
+def get_forecast_date(code,  updated = False) :
+    if not updated :
+        latest_date = get_maximum_date(code) + timedelta(days=1)
+    else :
+        latest_date = get_maximum_date(code)
+    
     dates = []
     i = 0
     
