@@ -44,11 +44,10 @@ def fine_tuning(code, _model0, _daily_data) :
         
         result1 = _cloned_model.evaluate(windowed_data)
         
-    if result0[0] > result1 :
-        cloned_model_prediction = predict(code, _cloned_model, daily_data)
-        return cloned_model_prediction
+        if result0[0] > result1 :
+            cloned_model_prediction = predict(code, _cloned_model, daily_data)
+            return cloned_model_prediction
         
-    else :
         base_model_prediction = predict(code, _model0, daily_data)
         return base_model_prediction
 
