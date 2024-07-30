@@ -3,7 +3,7 @@ name: Update Composite Volume
 on:
   workflow_dispatch:
   schedule:
-    - cron: '15 1 * * 2-6'
+    - cron: '0 1 * * 2-6'
 
 jobs:
   build:
