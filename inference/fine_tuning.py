@@ -6,14 +6,6 @@ import plotly.graph_objects as go
 import pandas as pd
 import tensorflow as tf
 
-def windowed_dataset(data, n_past, n_future, batch_size):
-    dataset = tf.data.Dataset.from_tensor_slices(data)
-    dataset = dataset.window(n_past+n_future, shift=1, drop_remainder=True)
-    dataset = dataset.flat_map(lambda window: window.batch(n_past+n_future))
-    dataset = dataset.map(lambda window: (window[:n_past], window[n_past:, :1]))
-    dataset = dataset.batch(batch_size).prefetch(1)
-    return dataset
-
 def clone_model(model) :
     cloned_model = tf.keras.models.clone_model(model)
     cloned_model.set_weights(model.get_weights())
@@ -24,12 +16,11 @@ def compile_cloned_model(model) :
                   optimizer=tf.keras.optimizers.Adam(0.0001))
 
 @st.cache_data(ttl=3600)
-def fine_tuning(code, _model0, _daily_data) :
+def fine_tuning(code, _model0, _data) :
     
-    daily_data = prepare_data(_daily_data)
-    normalized_data = normalize_data(daily_data, daily_data.max(axis=0), daily_data.min(axis=0))
+    normalized_data = normalize_data(_data, _data.max(axis=0), _data.min(axis=0))
     windowed_data = windowed_dataset(normalized_data,
-                                     100, 10, 64)
+                                     20, 1, 64)
     
     result0 = _model0.evaluate(windowed_data)
 
@@ -45,32 +36,29 @@ def fine_tuning(code, _model0, _daily_data) :
         result1 = _cloned_model.evaluate(windowed_data)
         
         if result0[0] > result1 :
-            cloned_model_prediction = predict(code, _cloned_model, daily_data)
+            cloned_model_prediction = predict(code, _cloned_model, _data)
             return cloned_model_prediction
         
-        base_model_prediction = predict(code, _model0, daily_data)
-        return base_model_prediction
+    base_model_prediction = predict(code, _model0, _data)
+    return base_model_prediction
 
 @st.cache_data(ttl=3600)
-def show_prediction_chart(code, daily_data, forecast, datebreaks) :
-	dates = get_forecast_date(code)
-	prediction_chart = make_graph(daily_data, datebreaks, "1d",
+def show_prediction_chart(code, _data, _forecast, _datebreaks) :
+    prediction_date = get_forecast_date()
+    prediction_dates = np.append(_data.index.values, prediction_date)
+    prediction_chart = make_graph(_data[-100:], _datebreaks[-100:], "1wk",
 								  "Candlestick", [], [], [])
-	
-	prediction_chart.add_trace(go.Scatter(x=dates, y=forecast, mode='lines',
-										  line=dict(color=line_coloring(forecast), width=2),
+    prediction_chart.add_trace(go.Scatter(x=prediction_dates[-100:], y=_forecast[-100:], mode='lines',
+										  line=dict(color='cyan', width=2),
 										  name="Predicted", showlegend=False))
-										  
-	return prediction_chart
+    
+    return prediction_chart, prediction_date
 
-@st.cache_data(ttl=3600)
-def show_prediction_table(code, forecast) :
-	dates = get_forecast_date(code)
-	pred_df = pd.DataFrame({"Date":dates,
-							"Predicted Close Price":forecast})
-	pred_df.set_index("Date", inplace=True)
-	return pred_df
-
+def metric_prediction(code, _data, _forecast) :
+    pred_diff = round((_forecast - _data), 2)
+    pred_diff_percent = round(100*(pred_diff/_data), 2)
+    return pred_diff, pred_diff_percent
+    
 @st.cache_resource
 def get_callback() :
     class myCallback(tf.keras.callbacks.Callback) :

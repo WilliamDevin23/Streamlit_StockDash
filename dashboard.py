@@ -372,26 +372,31 @@ def main() :
             st.markdown("Train the model will take around 1-2 minutes. \
             Don't do anything while the model is training, or the training \
             will be stopped, and you must start over again. \
-            \nThe prediction yields an average MAE of \
-            around 0.03 - 0.05 on 47 normalized stock codes price data.  \
             \nPlease be aware that the model is experimental, and the prediction \
             should not fully be taken as investment advice.")
         
         if st.button("Predict Now!") :
             # Get the daily data spans for 10 years.
-            daily_data, datebreaks = get_stock(code=st.session_state.code.lower(),
-                                               period="10y", interval="1d")
+            weekly_data, datebreaks = get_stock(code=st.session_state.code.lower(),
+                                               period="10y", interval="1wk")
+    
+            weekly_data_cleaned = prepare_data(weekly_data)
             
             # Retrain the model and forecast the next 10 days prices.
             model = get_model()
-            forecast = fine_tuning(st.session_state.code, model, daily_data)
-            
-            predict_fig = show_prediction_chart(st.session_state.code, daily_data.iloc[-100:],
-                                                forecast, datebreaks)
+            forecast = fine_tuning(st.session_state.code, model, weekly_data_cleaned)
+            predict_fig, prediction_date = show_prediction_chart(st.session_state.code, weekly_data,
+                                                                 forecast, datebreaks)
             st.plotly_chart(predict_fig)
             
-            prediction_df = show_prediction_table(st.session_state.code, forecast)
-            st.dataframe(prediction_df, use_container_width=True)
+            diff, diff_percent = metric_prediction(st.session_state.code, weekly_data["Close"].values[-1], forecast[-1])
+            prediction_metric = st.columns([0.7, 0.3])
+            prediction_metric[0].markdown(f"<p style='font-size: 28px;'><b>Predicted Price<br>for Next Week : {prediction_date}</b></p>",
+                                          unsafe_allow_html=True)
+            prediction_metric[1].metric(label="-", label_visibility='hidden',
+                                        value="Rp {0:.2f}".format(forecast[-1]),
+                                        delta="{0} ({1} %)".format(diff,
+                                        diff_percent))
     
     # If it's not weekend and the hour is within the active market time. Use UTC+7 timezone.
     while (hour >= 9 and hour <= 16) and realtime and not (day == "Saturday" or day == "Sunday") :

@@ -37,15 +37,8 @@ def get_stock_from_db(code, first_date):
 
 def get_stock(code=None, period="10y", interval="1d"):
     
-    if code == "ihsg" :
-        stock_tick = yf.Ticker("^JKSE", session=session)
-    elif code == "lq45" :
-        stock_tick = yf.Ticker("^JKLQ45", session=session)
-    else :
-        stock_tick = yf.Ticker(code.upper()+".JK", session=session)
-    
     updated_status, today_data = is_updated(code)
-    predicted_days = get_forecast_date(code, updated_status)
+    predicted_day = get_forecast_date()
     first_date = get_first_date(code, period, interval)
     stock_data = get_stock_from_db(code, first_date)
     
@@ -55,13 +48,14 @@ def get_stock(code=None, period="10y", interval="1d"):
     
     if interval[1:] == "d":
         dt_all = pd.date_range(start=stock_data.index.tolist()[0],
-                               end=predicted_days[-1], freq="D")
+                               end=stock_data.index.tolist()[-1], freq="D")
         dt_all_str = [d.strftime("%Y-%m-%d") for d in dt_all.tolist()]
     else :
         stock_data = resample(stock_data, interval)
+        stock_data.dropna(how="any", axis=0, inplace=True)
         if interval[1:] == "wk":
             dt_all = pd.date_range(start=stock_data.index.tolist()[0],
-                                   end=stock_data.index.tolist()[-1], freq="7D")
+                                   end=predicted_day, freq="7D")
             dt_all_str = [d.strftime("%Y-%m-%d") for d in dt_all.tolist()]
             
         else :
@@ -69,7 +63,7 @@ def get_stock(code=None, period="10y", interval="1d"):
                                    end=stock_data.index.tolist()[-1], freq="ME")
             dt_all_str = [d.strftime("%Y-%m") for d in dt_all.tolist()]
         
-    dt_breaks = [d for d in dt_all_str if not d in stock_data.index.tolist() and not d in predicted_days]
+    dt_breaks = [d for d in dt_all_str if d not in stock_data.index.tolist() and d != predicted_day]
     return stock_data, dt_breaks
 
 def get_first_date(code, period, interval) :
@@ -129,19 +123,8 @@ def is_updated(code) :
     else :
         return False, today_data
         
-def get_forecast_date(code,  updated = False) :
-    if not updated :
-        latest_date = get_maximum_date(code) + timedelta(days=1)
-    else :
-        latest_date = get_maximum_date(code)
-    
-    dates = []
-    i = 0
-    
-    while len(dates) < 10 :
-        if (latest_date + timedelta(days=1*i)).strftime("%A") not in ['Sunday', 'Saturday'] :
-            dates.append((latest_date + timedelta(days=1*i)).strftime("%Y-%m-%d"))
-            i += 1
-        else :
-            latest_date = latest_date + timedelta(days=1)
-    return dates
+def get_forecast_date() :
+    max_date, _, _, _ = get_today()
+    monday = max_date - timedelta(max_date.weekday())
+    friday = monday + timedelta(days=11)
+    return friday.strftime("%Y-%m-%d")
