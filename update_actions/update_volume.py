@@ -16,13 +16,16 @@ def update_volume(cursor, code) :
     else :
         db_name = "lq45"
     
-    data = yf.Ticker(code).history("1d", "1d")
-    data.index = data.index.strftime("%Y-%m-%d")
+    data = yf.Ticker(code).history("1wk", "1d")
+    data.reset_index(inplace=True)
+    data["Date"] = data["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
     
-    yesterday_date = data.index.values[0]
-    yesterday_volume = data["Volume"].values[0]
+    cur.execute("""SELECT MAX("Date") FROM {};""".format(db_name))
+    latest_date_from_db = cur.fetchall()[-1][0]
+    latest_date_from_db = latest_date_from_db.strftime("%Y-%m-%d")
+    data = data[data["Date"] == latest_date_from_db]
     
-    cur.execute("""UPDATE {} SET "Volume" = {} WHERE "Date" = '{}';""".format(db_name, yesterday_volume, yesterday_date))
+    cur.execute("""UPDATE {} SET "Volume" = {} WHERE "Date" = '{}';""".format(db_name, data["Volume"].values[0], latest_date_from_db))
 
 for code in composites :
     update_volume(cur, code)

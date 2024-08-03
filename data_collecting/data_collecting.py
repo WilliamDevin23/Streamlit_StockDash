@@ -23,7 +23,7 @@ def get_codes():
     choice = list(df["Long Name"].values)
     return ["IHSG (Indeks Harga Saham Gabungan)", "LQ45 (Liquid 45)"] + sorted(choice)
 
-@st.cache_data
+@st.cache_data(ttl=3600)
 def get_news(code) :
     news_df = conn.query("""SELECT * FROM news WHERE "Code" = '{}' ORDER BY "Date" DESC;""".format(code), ttl=0)
     news_df["Date"] = news_df["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
