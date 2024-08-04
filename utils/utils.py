@@ -25,6 +25,21 @@ def line_coloring(data):
     else:
         return "green"
 
+def candle_coloring(data):
+    for i in range(1, len(data)) :
+        if data["Close"].iloc[i] > data["Open"].iloc[i] :
+            data["Color"].iloc[i] = "green"
+        elif data["Close"].iloc[i] == data["Open"].iloc[i] :
+            if data["Close"].iloc[i] > data["Close"].iloc[i-1] :
+                data["Color"].iloc[i] = "green"
+            elif data["Close"].iloc[i] < data["Close"].iloc[i-1] :
+                data["Color"].iloc[i] = "red"
+            else :
+                data["Color"].iloc[i] = data["Color"].iloc[i-1]
+        else :
+            data["Color"].iloc[i] = "red"
+    return data
+    
 def make_graph(data, datebreaks, interval, chart_type, ma_arr, colors, stochastic_param, size=3):
     if interval[1:] == "d":
         dval = int(interval[0])*60*24
@@ -34,9 +49,12 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr, colors, stochasti
         dval = int(interval[0])*60*24*30
 
     new_data = data.copy()
-    volume_color = np.where(new_data["Close"] >= new_data["Open"], "green", "red")
-    volume_color[0] = "green" if new_data["Open"].values[0] <= new_data["Close"].values[0] else "red"
+    new_data.insert(len(new_data.columns), "Color", 1)
+    new_data["Color"].iloc[0] = "green" if new_data["Open"].values[0] <= new_data["Close"].values[0] else "red"
+    new_data = candle_coloring(new_data)
     new_data = add_ma(new_data, ma_arr)
+    
+    volume_candle_hover_color = new_data["Color"].values
     
     if len(stochastic_param) > 0 :
         period=stochastic_param[0]
@@ -55,13 +73,17 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr, colors, stochasti
     
     else :
         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.05, subplot_titles=('', 'Volume'), row_width=[0.3, 0.8])
-        fig.add_trace(go.Bar(x=data.index, y=data["Volume"], showlegend=False, marker_color=volume_color, name="Volume"), row=2, col=1)
+        fig.add_trace(go.Bar(x=data.index, y=data["Volume"], showlegend=False, marker_color=volume_candle_hover_color, name="Volume"), row=2, col=1)
         
     if chart_type == "Candlestick":
         fig.add_trace(go.Candlestick(x=new_data.index,
                     open=new_data["Open"], close=new_data["Close"],
                     high=new_data["High"], low=new_data["Low"], showlegend=False, name="Price",
                     increasing_line_color='green', decreasing_line_color='red'), row=1, col=1)
+        
+        fig.update_traces(hoverlabel=dict(bgcolor=volume_candle_hover_color),
+                          selector=dict(type="candlestick"))
+    
     else :
         data_arr = new_data["Open"].tolist()[:1] + new_data["Close"].tolist()[1:]
         color = line_coloring(data_arr)

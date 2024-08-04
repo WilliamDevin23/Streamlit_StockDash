@@ -114,15 +114,6 @@ def main() :
                                       annotation_position='bottom right',
                                       annotation_font_color=h_color, row=1, col=1)
                     
-                # List that stores hoverinfo background colors corresponding to each data.
-                hover_bg_color = ["green" if close >= open_\
-                    else "red" for open_, close in zip(stock_data["Open"].values,
-                                                       stock_data["Close"].values)]
-                    
-                # Handle candlestick hoverinfo background color.
-                fig.update_traces(hoverlabel=dict(bgcolor=hover_bg_color),
-                                  selector=dict(type="candlestick"))
-                    
                 # Display the plot.
                 st.plotly_chart(fig, use_container_width=True)
     
