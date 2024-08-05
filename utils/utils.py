@@ -25,7 +25,7 @@ def line_coloring(data):
     else:
         return "green"
 
-def volume_hover_coloring(data):
+def candle_coloring(data):
     for i in range(1, len(data)) :
         if data["Close"].iloc[i] > data["Open"].iloc[i] :
             data["Color"].iloc[i] = "green"
@@ -51,7 +51,7 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr, colors, stochasti
     new_data = data.copy()
     new_data.insert(len(new_data.columns), "Color", 1)
     new_data["Color"].iloc[0] = "green" if new_data["Open"].values[0] <= new_data["Close"].values[0] else "red"
-    new_data = volume_hover_coloring(new_data)
+    new_data = candle_coloring(new_data)
     new_data = add_ma(new_data, ma_arr)
     
     volume_candle_hover_color = new_data["Color"].values
