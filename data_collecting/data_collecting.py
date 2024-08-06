@@ -114,14 +114,17 @@ def is_updated(code) :
         tick = "^JKLQ45"
     else :
         tick = code.upper() + ".JK"
-    today_data = yf.Ticker(tick).history("1d", "1d", prepost=True).reset_index()
-    today_data["Date"] = today_data["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
-    latest_date_from_yf = today_data["Date"].values[-1]
-    latest_date_from_db = get_maximum_date(code).strftime("%Y-%m-%d")
-    if latest_date_from_db == latest_date_from_yf :
+    try :
+        today_data = yf.Ticker(tick).history("1d", "1d", prepost=True).reset_index()
+        today_data["Date"] = today_data["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
+        latest_date_from_yf = today_data["Date"].values[-1]
+        latest_date_from_db = get_maximum_date(code).strftime("%Y-%m-%d")
+        if latest_date_from_db == latest_date_from_yf :
+            return True, None
+        else :
+            return False, today_data
+    except Exception as e :
         return True, None
-    else :
-        return False, today_data
         
 def get_forecast_date() :
     max_date, _, _, _ = get_today()

@@ -25,19 +25,19 @@ def line_coloring(data):
     else:
         return "green"
 
-def candle_coloring(data):
+def volume_hover_coloring(data):
     for i in range(1, len(data)) :
         if data["Close"].iloc[i] > data["Open"].iloc[i] :
-            data["Color"].iloc[i] = "green"
+            data.iloc[i, -1] = "green"
         elif data["Close"].iloc[i] == data["Open"].iloc[i] :
             if data["Close"].iloc[i] > data["Close"].iloc[i-1] :
-                data["Color"].iloc[i] = "green"
+                data.iloc[i, -1] = "green"
             elif data["Close"].iloc[i] < data["Close"].iloc[i-1] :
-                data["Color"].iloc[i] = "red"
+                data.iloc[i, -1] = "red"
             else :
-                data["Color"].iloc[i] = data["Color"].iloc[i-1]
+                data.iloc[i, -1] = data.iloc[i-1, -1]
         else :
-            data["Color"].iloc[i] = "red"
+            data.iloc[i, -1] = "red"
     return data
     
 def make_graph(data, datebreaks, interval, chart_type, ma_arr, colors, stochastic_param, size=3):
@@ -49,9 +49,9 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr, colors, stochasti
         dval = int(interval[0])*60*24*30
 
     new_data = data.copy()
-    new_data.insert(len(new_data.columns), "Color", 1)
-    new_data["Color"].iloc[0] = "green" if new_data["Open"].values[0] <= new_data["Close"].values[0] else "red"
-    new_data = candle_coloring(new_data)
+    new_data.insert(len(new_data.columns), "Color", "gray")
+    new_data.iloc[0, -1] = "green" if new_data["Open"].values[0] <= new_data["Close"].values[0] else "red"
+    new_data = volume_hover_coloring(new_data)
     new_data = add_ma(new_data, ma_arr)
     
     volume_candle_hover_color = new_data["Color"].values
@@ -67,13 +67,20 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr, colors, stochasti
                             subplot_titles=('', f'Stochastic ({period}, {k}, {d})'), row_width=[0.3, 0.8])
         
         fig.add_trace(go.Scatter(x=new_data.index, y=new_data["K-Stochastic"], name="%K", 
-                                 marker={'color':colors["stoch_color"][0], 'size':size}, mode='lines', showlegend=True), row=2, col=1)
+                                 marker={'color':colors["stoch_color"][0], 'size':size},
+                                 mode='lines', showlegend=True), row=2, col=1)
         fig.add_trace(go.Scatter(x=new_data.index, y=new_data["D-Stochastic"], name="%D", 
-                                 marker={'color':colors["stoch_color"][1], 'size':size}, mode='lines', showlegend=True), row=2, col=1)
+                                 marker={'color':colors["stoch_color"][1], 'size':size},
+                                 mode='lines', showlegend=True), row=2, col=1)
+        fig.update_traces(hoverlabel=dict(bgcolor='black'), selector=dict(type='scatter'))
     
     else :
-        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.05, subplot_titles=('', 'Volume'), row_width=[0.3, 0.8])
-        fig.add_trace(go.Bar(x=data.index, y=data["Volume"], showlegend=False, marker_color=volume_candle_hover_color, name="Volume"), row=2, col=1)
+        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.05,
+                            subplot_titles=('', 'Volume'), row_width=[0.3, 0.8])
+        fig.add_trace(go.Bar(x=data.index, y=data["Volume"], showlegend=False,
+                      marker_color=volume_candle_hover_color, name="Volume"), row=2, col=1)
+        fig.update_traces(hoverlabel=dict(bgcolor=volume_candle_hover_color),
+                          selector=dict(type='bar'))
         
     if chart_type == "Candlestick":
         fig.add_trace(go.Candlestick(x=new_data.index,
@@ -87,7 +94,8 @@ def make_graph(data, datebreaks, interval, chart_type, ma_arr, colors, stochasti
     else :
         data_arr = new_data["Open"].tolist()[:1] + new_data["Close"].tolist()[1:]
         color = line_coloring(data_arr)
-        fig.add_trace(go.Scatter(x=new_data.index, y=data_arr, line=dict(color=color, width=3), showlegend=False, name="Price"), row=1, col=1)
+        fig.add_trace(go.Scatter(x=new_data.index, y=data_arr, line=dict(color=color, width=3),
+                      showlegend=False, name="Price"), row=1, col=1)
     
     fig.update_layout(margin={"b":8, "t":8, "l":8, "r":8},
                       autosize=True, template='plotly_dark',
