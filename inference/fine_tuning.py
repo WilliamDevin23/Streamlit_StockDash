@@ -29,7 +29,7 @@ def fine_tuning(code, _model0, _data) :
         callback = get_callback()
 
         compile_cloned_model(_cloned_model)
-        _cloned_model.fit(windowed_data, epochs=2,
+        _cloned_model.fit(windowed_data, epochs=10,
                           callbacks=[callback], verbose=1,
                           use_multiprocessing=True)
         
