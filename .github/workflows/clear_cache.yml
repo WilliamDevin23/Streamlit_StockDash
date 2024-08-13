@@ -1,0 +1,28 @@
+name: Clear Cache
+   
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+    - cron: '3 0 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+  
+      - name: checkout repo content
+        uses: actions/checkout/@v4
+          
+      - name: setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.0'
+          cache: 'pip'
+          cache-dependency-path: 'update_actions/actions_requirements.txt'
+        
+      - name: install streamlit
+        run: pip install streamlit
+        
+      - name: clear the cache
+        run: streamlit cache clear
