@@ -37,9 +37,13 @@ if "colors" not in st.session_state : st.session_state.colors = {"ma_color": [],
                                                                  "stoch_color": []}
 if "ma_disable" not in st.session_state : st.session_state.ma_disable = True
 if "h_disable" not in st.session_state : st.session_state.h_disable = True
+if "clear_cache" not in st.session_state : st.session_state.clear_cache = True
 
 # Main Application
 def main() :
+    if st.session_state.clear_cache == True :
+        st.cache_data.clear()
+        st.session_state.clear_cache = False
     
     global date, day, hour, minute
     
