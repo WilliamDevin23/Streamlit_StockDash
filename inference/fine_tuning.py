@@ -51,6 +51,7 @@ def show_prediction_chart(code, _data, _forecast, _datebreaks) :
     prediction_chart.add_trace(go.Scatter(x=prediction_dates[-100:], y=_forecast[-100:], mode='lines',
 										  line=dict(color='cyan', width=2),
 										  name="Predicted", showlegend=False))
+    prediction_chart.update_traces(hoverlabel=dict(bgcolor='black'), selector=dict(type='scatter'))
     
     return prediction_chart, prediction_date
 
