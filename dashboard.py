@@ -42,7 +42,9 @@ if "clear_cache" not in st.session_state : st.session_state.clear_cache = True
 # Main Application
 def main() :
     if st.session_state.clear_cache == True :
-        st.cache_data.clear()
+        get_stock_from_db.clear()
+        get_maximum_date.clear()
+        get_news.clear()
         st.session_state.clear_cache = False
     
     global date, day, hour, minute
