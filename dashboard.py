@@ -26,7 +26,7 @@ st.markdown("""<style>
 
 # Main Application
 def main() :
-#Session states
+    #Session states
     if "chart_type" not in st.session_state : st.session_state.chart_type = "Candlestick"
     if "period_filter" not in st.session_state : st.session_state.period_filter = "1mo"
     if "interval_filter" not in st.session_state : st.session_state.interval_filter = "1d"
