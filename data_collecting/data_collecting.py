@@ -31,7 +31,7 @@ def get_news(code) :
 
 @st.cache_data(ttl=3600)
 def get_stock_from_db(code, first_date):
-    stock_data = conn.query("""SELECT * FROM {} WHERE "Date" >= '{}';""".format(code[:4], first_date))
+    stock_data = conn.query("""SELECT * FROM {} WHERE "Date" >= '{}';""".format(code[:4], first_date), ttl=0)
     stock_data["Date"] = stock_data["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
     return stock_data    
 
@@ -102,7 +102,7 @@ def get_today() :
 
 @st.cache_data(ttl=3600)
 def get_maximum_date(code) :
-    max_date = conn.query("""SELECT MAX("Date") FROM {};""".format(code))["max"].values.tolist()[0]
+    max_date = conn.query("""SELECT MAX("Date") FROM {};""".format(code), ttl=0)["max"].values.tolist()[0]
     max_date = max_date.strftime("%Y-%m-%d")
     max_date = datetime.strptime(max_date, "%Y-%m-%d")
     return max_date
