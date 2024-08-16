@@ -24,23 +24,23 @@ st.markdown("""<style>
                 }
             </style>""", unsafe_allow_html=True)
 
-#Session states
-if "chart_type" not in st.session_state : st.session_state.chart_type = "Candlestick"
-if "period_filter" not in st.session_state : st.session_state.period_filter = "1mo"
-if "interval_filter" not in st.session_state : st.session_state.interval_filter = "1d"
-if "code" not in st.session_state : st.session_state.code = "IHSG"
-if "moving_avgs" not in st.session_state : st.session_state.moving_avgs = []
-if "stochastic" not in st.session_state : st.session_state.stochastic = []
-if "horizontals" not in st.session_state : st.session_state.horizontals = []
-if "colors" not in st.session_state : st.session_state.colors = {"ma_color": [],
-                                                                 "h_color":[],
-                                                                 "stoch_color": []}
-if "ma_disable" not in st.session_state : st.session_state.ma_disable = True
-if "h_disable" not in st.session_state : st.session_state.h_disable = True
-if "clear_cache" not in st.session_state : st.session_state.clear_cache = True
-
 # Main Application
 def main() :
+#Session states
+    if "chart_type" not in st.session_state : st.session_state.chart_type = "Candlestick"
+    if "period_filter" not in st.session_state : st.session_state.period_filter = "1mo"
+    if "interval_filter" not in st.session_state : st.session_state.interval_filter = "1d"
+    if "code" not in st.session_state : st.session_state.code = "IHSG"
+    if "moving_avgs" not in st.session_state : st.session_state.moving_avgs = []
+    if "stochastic" not in st.session_state : st.session_state.stochastic = []
+    if "horizontals" not in st.session_state : st.session_state.horizontals = []
+    if "colors" not in st.session_state : st.session_state.colors = {"ma_color": [],
+                                                                 "h_color":[],
+                                                                 "stoch_color": []}
+    if "ma_disable" not in st.session_state : st.session_state.ma_disable = True
+    if "h_disable" not in st.session_state : st.session_state.h_disable = True
+    if "clear_cache" not in st.session_state : st.session_state.clear_cache = True
+    
     if st.session_state.clear_cache == True :
         get_stock_from_db.clear()
         get_maximum_date.clear()
