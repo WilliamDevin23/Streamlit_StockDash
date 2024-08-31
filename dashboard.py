@@ -22,6 +22,13 @@ st.markdown("""<style>
                 [data-testid="stHeading"] {
                     text-align: center;
                 }
+                [data-testid="stHorizontalBlock"]:last-of-type > div {
+                    height: 500px;
+                    overflow: scroll;
+                    padding: 10px;
+                    border: 1px solid gray;
+                    border-radius: 5px;
+                }
             </style>""", unsafe_allow_html=True)
 
 # Main Application
@@ -67,8 +74,8 @@ def main() :
     name = option[5:]
     
     # Defining Three Tabs
-    dashboard, prediction, news, download = st.tabs(["Dashboard", "Predict",
-                                                     "News", "Download"])
+    dashboard, insights, download = st.tabs(["Dashboard", "Insights", "Download"])
+    
     # Dashboard tab
     with dashboard :
         #Toggle Button to Activate/Deactivate Auto Update
@@ -331,19 +338,6 @@ def main() :
                                     disabled = len(st.session_state.stochastic) == 0,
                                     on_click=clear_stochastic)
     
-    # News tab. Displaying the news based on the selected stock code.
-    with news :
-        news_arr = get_news(st.session_state.code)
-        for news in news_arr :
-            container = st.container(border=True)
-            with container :
-                st.markdown(f"<h3><a href='{news[2]}' style='text-decoration: none;'>{news[1]}</a></h3>",
-                            unsafe_allow_html=True)
-                st.markdown(f"""<p style='color: gray;'>{news[3]}</p>""",
-                            unsafe_allow_html=True)
-                st.markdown(f"""<p style='color: gray; text-align: right;'>{news[4]}</p>""",
-                            unsafe_allow_html=True)
-    
     # Download tab. Download the tabular data as CSV based on the period and interval filter.
     with download :
         st.markdown("<h3 style='text-align:center;'>Download as CSV</h3>", unsafe_allow_html=True)
@@ -363,37 +357,66 @@ def main() :
                            file_name="{}_{}.csv".format(st.session_state.code, date),
                            mime="text/csv")
     
-    # Prediction tab
-    with prediction :
-        with st.expander("Attention...") :
-            st.markdown("Train the model will take around 1-2 minutes. \
-            Don't do anything while the model is training, or the training \
-            will be stopped, and you must start over again. \
-            \nPlease be aware that the model is experimental, and the prediction \
-            should not fully be taken as investment advice.")
+    # Insights tab
+    with insights :
         
-        if st.button("Predict Now!") :
-            # Get the daily data spans for 10 years.
-            weekly_data, datebreaks = get_stock(code=st.session_state.code.lower(),
-                                               period="10y", interval="1wk")
-    
-            weekly_data_cleaned = prepare_data(weekly_data)
+        news, predict = st.columns(2)
+        
+        with news :
+            st.subheader("News")
+            news_arr = get_news(st.session_state.code)
+            for news in news_arr :
+                container = st.container(border=True)
+                with container :
+                    st.markdown(f"<h3><a href='{news[2]}' style='text-decoration: none;'>{news[1]}</a></h3>",
+                                unsafe_allow_html=True)
+                    st.markdown(f"""<p style='color: gray;'>{news[3]}</p>""",
+                                unsafe_allow_html=True)
+                    st.markdown(f"""<p style='color: gray; text-align: right;'>{news[4]}</p>""",
+                                unsafe_allow_html=True)
+        
+        with predict :
+            st.subheader("Prediction")
+            with st.expander("Attention...") :
+                st.markdown("Train the model will take around 1-2 minutes. \
+                Don't do anything while the model is training, or the training \
+                will be stopped, and you must start over again. \
+                \nPlease be aware that the model is experimental, and the prediction \
+                should not fully be taken as investment advice.")
             
-            # Retrain the model and forecast the next 10 days prices.
-            model = get_model()
-            forecast = fine_tuning(st.session_state.code, model, weekly_data_cleaned)
-            predict_fig, prediction_date = show_prediction_chart(st.session_state.code, weekly_data,
-                                                                 forecast, datebreaks)
-            st.plotly_chart(predict_fig)
-            
-            diff, diff_percent = metric_prediction(st.session_state.code, weekly_data["Close"].values[-1], forecast[-1])
-            prediction_metric = st.columns([0.7, 0.3])
-            prediction_metric[0].markdown(f"<p style='font-size: 28px;'><b>Predicted Price<br>for Next Week : {prediction_date}</b></p>",
-                                          unsafe_allow_html=True)
-            prediction_metric[1].metric(label="-", label_visibility='hidden',
-                                        value="Rp {0:.2f}".format(forecast[-1]),
-                                        delta="{0} ({1} %)".format(diff,
-                                        diff_percent))
+            if st.button("Predict Now!") :
+                # Get the daily data spans for 10 years.
+                weekly_data, datebreaks = get_stock(code=st.session_state.code.lower(),
+                                                   period="10y", interval="1wk")
+        
+                weekly_data_cleaned = prepare_data(weekly_data)
+                
+                # Retrain the model and forecast the next 10 days prices.
+                model = get_model()
+                forecast = fine_tuning(st.session_state.code, model, weekly_data_cleaned)
+                predict_fig, prediction_date = show_prediction_chart(st.session_state.code, weekly_data,
+                                                                     forecast, datebreaks)
+                st.plotly_chart(predict_fig)
+                
+                diff, diff_percent = metric_prediction(st.session_state.code, weekly_data["Close"].values[-1], forecast[-1])
+                prediction_metric = st.columns([0.7, 0.3])
+                prediction_metric[0].markdown(f"<p style='font-size: 28px;'><b>Predicted Price<br>for Next Week : {prediction_date}</b></p>",
+                                              unsafe_allow_html=True)
+                prediction_metric[1].metric(label="-", label_visibility='hidden',
+                                            value="Rp {0:.2f}".format(forecast[-1]),
+                                            delta="{0} ({1} %)".format(diff,
+                                            diff_percent))
+                st.markdown("""
+                            <style>
+                                [data-testid="stHorizontalBlock"]:last-of-type > div {
+                                height: 500px;
+                                overflow: scroll;
+                                padding: 10px;
+                                border: 1px solid gray;
+                                border-radius: 5px;
+                            }
+                            </style>
+                            """, unsafe_allow_html=True)
     
     # If it's not weekend and the hour is within the active market time. Use UTC+7 timezone.
     while (hour >= 9 and hour <= 16) and realtime and not (day == "Saturday" or day == "Sunday") :
